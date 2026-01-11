@@ -1,0 +1,12 @@
+{
+    "timestamp": "2026-01-11T09:42:54.401408",
+    "interaction_id": "4f313c5e-ceba-44bd-ae30-6b67d4adc731",
+    "query": "Test Query",
+    "response": "Test Answer",
+    "retrieved_chunks": [
+        "chunk1",
+        "chunk2"
+    ],
+    "model": "test-model",
+    "latency_seconds": 0.5
+}

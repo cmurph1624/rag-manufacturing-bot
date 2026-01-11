@@ -1,44 +1,63 @@
 import os
-import slack_bolt
+import json
+import time
+import uuid
+from datetime import datetime
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
-import chromadb
-import ollama
+import ssl
+import certifi
+from slack_sdk import WebClient
+# Import the separated logic
+from rag_logic import generate_answer
 
 # Load environment variables
 load_dotenv()
 
-# Configuration
-DB_PATH = "./chroma_db"
-COLLECTION_NAME = "aerostream_docs"
-EMBEDDING_MODEL = "nomic-embed-text"
-GENERATION_MODEL = "llama3.2"
-
-# Initialize ChromaDB Client
-print(f"Connecting to ChromaDB at '{DB_PATH}'...")
-chroma_client = chromadb.PersistentClient(path=DB_PATH)
-collection = chroma_client.get_collection(name=COLLECTION_NAME)
-
 # Create SSL context using certifi
-import ssl
-import certifi
-from slack_sdk import WebClient
-
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"), ssl=ssl_context)
 
 # Initialize Slack App with custom WebClient
+
 app = App(client=client)
+
+# Logging Configuration
+LOGS_DIR = "logs"
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+def log_interaction(query, response_data, latency):
+    """
+    Logs the interaction details to a JSON file.
+    """
+    timestamp = datetime.now().isoformat()
+    interaction_id = str(uuid.uuid4())
+    
+    log_entry = {
+        "timestamp": timestamp,
+        "interaction_id": interaction_id,
+        "query": query,
+        "response": response_data.get("answer"),
+        "retrieved_chunks": response_data.get("retrieved_chunks", []),
+        "model": response_data.get("model", "unknown"),
+        "latency_seconds": latency
+    }
+    
+    filename = f"interaction_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{interaction_id}.json"
+    filepath = os.path.join(LOGS_DIR, filename)
+    
+    try:
+        with open(filepath, "w") as f:
+            json.dump(log_entry, f, indent=4)
+        print(f"Logged interaction to {filepath}")
+    except Exception as e:
+        print(f"Failed to log interaction: {e}")
 
 @app.event("app_mention")
 def handle_app_mention(event, say):
     """
     Event listener for app_mention.
-    1. Acknowledge.
-    2. Search ChromaDB.
-    3. Generate answer using Ollama.
-    4. Reply with answer and citations.
     """
     user_query = event.get("text")
     channel_id = event.get("channel")
@@ -49,78 +68,19 @@ def handle_app_mention(event, say):
     # Step A: Acknowledge
     say(f"Thinking...", thread_ts=thread_ts)
 
-    try:
-        # Step B: Search
-        # Generate embedding for the query
-        response = ollama.embeddings(model=EMBEDDING_MODEL, prompt=user_query)
-        query_embedding = response.get("embedding")
+    # Call the core logic with timing
+    start_time = time.time()
+    response_data = generate_answer(user_query)
+    end_time = time.time()
+    latency = end_time - start_time
 
-        if not query_embedding:
-            say("Error: Failed to generate embedding for search.", thread_ts=thread_ts)
-            return
+    # Log the interaction
+    log_interaction(user_query, response_data, latency)
 
-        # Query ChromaDB (Get top 7 results)
-        results = collection.query(
-            query_embeddings=[query_embedding],
-            n_results=7
-        )
+    final_response = response_data["answer"]
 
-        documents = results["documents"][0] # list of strings
-
-        print("\n--- DEBUG: Retrieved Context ---")
-        for doc in documents:
-            print(doc[:200] + "...") # Print first 200 chars
-        print("--------------------------------\n")
-        metadatas = results["metadatas"][0] # list of dicts
-
-        if not documents:
-            say("I couldn't find any relevant documents in the database.", thread_ts=thread_ts)
-            return
-
-        # Combine documents into context text
-        context_text = "\n\n---\n\n".join(documents)
-
-        # Step C: Construct Prompt
-        # We'll use the chat API, mapping requirements to roles.
-        system_instruction = (
-            "You are a helpful manufacturing support assistant. "
-            "Answer the question using ONLY the following context. "
-            "If you don't know, say you don't know."
-        )
-        
-        user_prompt_content = f"Context:\n{context_text}\n\nQuestion: {user_query}"
-
-        # Step D: Generate
-        print("Sending prompt to Ollama...")
-        response = ollama.chat(model=GENERATION_MODEL, messages=[
-            {'role': 'system', 'content': system_instruction},
-            {'role': 'user', 'content': user_prompt_content},
-        ])
-
-        answer = response['message']['content']
-
-        # Step F: Citations
-        citations = []
-        seen_sources = set()
-        for meta in metadatas:
-            source = meta.get("source", "Unknown")
-            page = meta.get("page_number", "Unknown")
-            # Create a unique key to avoid duplicate citations if chunks are from same page
-            citation_key = f"{source}:{page}"
-            if citation_key not in seen_sources:
-                citations.append(f"• {source} (Page {page})")
-                seen_sources.add(citation_key)
-        
-        citation_text = "\n\n*References:*\n" + "\n".join(citations)
-        
-        final_response = f"{answer}{citation_text}"
-
-        # Step E: Reply
-        say(final_response, thread_ts=thread_ts)
-
-    except Exception as e:
-        print(f"Error processing request: {e}")
-        say(f"Sorry, I encountered an error: {str(e)}", thread_ts=thread_ts)
+    # Step E: Reply
+    say(final_response, thread_ts=thread_ts)
 
 if __name__ == "__main__":
     app_token = os.environ.get("SLACK_APP_TOKEN")
