@@ -2,9 +2,41 @@ import json
 import ollama
 import os
 import time
+import sqlite3
 from datetime import datetime
 from rag_logic import generate_answer, GENERATION_MODEL
 from tqdm import tqdm
+
+DB_PATH = "evaluation_history.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            model_name TEXT NOT NULL,
+            accuracy REAL NOT NULL,
+            total_questions INTEGER NOT NULL,
+            avg_latency REAL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def log_to_db(accuracy, total_questions, avg_latency, model_name):
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    timestamp = datetime.now().isoformat()
+    cursor.execute('''
+        INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (timestamp, model_name, accuracy, total_questions, avg_latency))
+    conn.commit()
+    conn.close()
+    print(f"Run metrics logged to '{DB_PATH}'")
 
 # Configuration
 TEST_SET_PATH = "test_set.json"
@@ -133,6 +165,12 @@ def main():
     with open(filepath, "w") as f:
         json.dump(final_output, f, indent=4)
     print(f"Detailed results saved to '{filepath}'")
+    
+    # Log to SQLite Database
+    try:
+        log_to_db(accuracy, len(qa_pairs), latency, GENERATION_MODEL)
+    except Exception as e:
+        print(f"Warning: Failed to log to database: {e}")
 
 if __name__ == "__main__":
     main()
