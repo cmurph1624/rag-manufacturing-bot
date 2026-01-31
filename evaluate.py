@@ -24,6 +24,22 @@ def init_db():
         )
     ''')
     
+    # Create run_details table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS run_details (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id INTEGER,
+            question TEXT,
+            gold_answer TEXT,
+            bot_answer TEXT,
+            is_correct BOOLEAN,
+            citation_match BOOLEAN,
+            latency REAL,
+            retrieval_type TEXT,
+            FOREIGN KEY(run_id) REFERENCES runs(id)
+        )
+    ''')
+    
     # Simple migration: check if column exists, if not add it
     cursor.execute("PRAGMA table_info(runs)")
     columns = [info[1] for info in cursor.fetchall()]
@@ -34,7 +50,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type):
+def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type, detailed_results=None):
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -43,9 +59,31 @@ def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type
         INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type))
+    
+    run_id = cursor.lastrowid
+    
+    if detailed_results:
+        print(f"Logging {len(detailed_results)} detailed results for run {run_id}...")
+        for res in detailed_results:
+            cursor.execute('''
+                INSERT INTO run_details (
+                    run_id, question, gold_answer, bot_answer, is_correct, 
+                    citation_match, latency, retrieval_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                run_id, 
+                res['question'], 
+                res['gold_answer'], 
+                res['bot_answer'], 
+                res['is_correct'], 
+                res['citation_match'], 
+                res['latency_seconds'], 
+                res.get('retrieval_type', 'unknown')
+            ))
+            
     conn.commit()
     conn.close()
-    print(f"Run metrics logged to '{DB_PATH}'")
+    print(f"Run metrics and details logged to '{DB_PATH}'")
 
 # Configuration
 TEST_SET_PATH = "test_set.json"
@@ -182,7 +220,7 @@ def main():
         # Since retrieval type is constant per run in this architecture, we use the last one seen or default
         # But logically should be consistent.
         final_retrieval_type = results[0]["retrieval_type"] if results else "unknown"
-        log_to_db(accuracy, len(qa_pairs), latency, GENERATION_MODEL, final_retrieval_type)
+        log_to_db(accuracy, len(qa_pairs), latency, GENERATION_MODEL, final_retrieval_type, results)
     except Exception as e:
         print(f"Warning: Failed to log to database: {e}")
 
