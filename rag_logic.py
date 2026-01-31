@@ -1,65 +1,41 @@
-import os
-import chromadb
 import ollama
 from dotenv import load_dotenv
+from typing import Dict, Any
+from retrieval import RetrievalFactory
 
 # Load environment variables
 load_dotenv()
 
 # Configuration
-DB_PATH = "./chroma_db"
-COLLECTION_NAME = "aerostream_docs"
-EMBEDDING_MODEL = "nomic-embed-text"
 GENERATION_MODEL = "llama3.2"
+DEFAULT_RETRIEVAL_STRATEGY = "semantic"
 
-# Globals (Lazy loaded)
-chroma_client = None
-collection = None
-
-def get_chroma_collection():
-    global chroma_client, collection
-    if collection is None:
-        print(f"Connecting to ChromaDB at '{DB_PATH}'...")
-        chroma_client = chromadb.PersistentClient(path=DB_PATH)
-        collection = chroma_client.get_collection(name=COLLECTION_NAME)
-    return collection
-
-from typing import Dict, Any
-
-def generate_answer(user_query: str) -> Dict[str, Any]:
+def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETRIEVAL_STRATEGY) -> Dict[str, Any]:
     """
-    Core RAG logic:
-    1. Embed query
-    2. Search ChromaDB
-    3. Generate answer with Ollama
-    4. Format with citations
+    Core RAG logic using the Strategy Pattern for retrieval.
+    1. Retrieve context using selected strategy
+    2. Generate answer with Ollama
+    3. Format with citations
     """
     try:
-        # Step B: Search
-        # Generate embedding for the query
-        response = ollama.embeddings(model=EMBEDDING_MODEL, prompt=user_query)
-        query_embedding = response.get("embedding")
+        # Step B: Search (using Strategy)
+        strategy = RetrievalFactory.get_strategy(retrieval_strategy_type)
+        retrieval_result = strategy.retrieve(user_query)
+        
+        documents = retrieval_result.documents
+        metadatas = retrieval_result.metadatas
 
-        if not query_embedding:
-            return "Error: Failed to generate embedding for search."
-
-        # Query ChromaDB (Get top 7 results)
-        col = get_chroma_collection()
-        results = col.query(
-            query_embeddings=[query_embedding],
-            n_results=7
-        )
-
-        documents = results["documents"][0] # list of strings
-
-        print(f"\n--- DEBUG: Retrieved Context for '{user_query}' ---")
+        print(f"\n--- DEBUG: Retrieved Context for '{user_query}' [{retrieval_strategy_type}] ---")
         for doc in documents:
             print(doc[:200] + "...") # Print first 200 chars
         print("--------------------------------\n")
-        metadatas = results["metadatas"][0] # list of dicts
 
         if not documents:
-            return "I couldn't find any relevant documents in the database."
+            return {
+                 "answer": "I couldn't find any relevant documents in the database.",
+                 "retrieved_chunks": [],
+                 "model": GENERATION_MODEL
+            }
 
         # Combine documents into context text
         context_text = "\n\n---\n\n".join(documents)
@@ -75,7 +51,6 @@ def generate_answer(user_query: str) -> Dict[str, Any]:
 
         # Step D: Generate
         print("Sending prompt to Ollama...")
-        # Note: ollama.chat might assume a running server.
         response = ollama.chat(model=GENERATION_MODEL, messages=[
             {'role': 'system', 'content': system_instruction},
             {'role': 'user', 'content': user_prompt_content},
@@ -101,6 +76,7 @@ def generate_answer(user_query: str) -> Dict[str, Any]:
             "answer": final_answer,
             "retrieved_chunks": documents,
             "model": GENERATION_MODEL,
+            "retrieval_type": strategy.type
         }
 
     except Exception as e:
@@ -109,5 +85,6 @@ def generate_answer(user_query: str) -> Dict[str, Any]:
             "answer": f"Sorry, I encountered an error: {str(e)}",
             "retrieved_chunks": [],
             "model": GENERATION_MODEL,
+            "retrieval_type": retrieval_strategy_type,
             "error": str(e)
         }

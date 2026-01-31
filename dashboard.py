@@ -46,6 +46,7 @@ def main():
         column_config={
             "timestamp": "Time",
             "model_name": "Model",
+            "retrieval_type": "Method",
             "accuracy": "Accuracy",
             "total_questions": "Questions",
             "avg_latency": "Latency (avg)",

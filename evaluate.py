@@ -19,21 +19,30 @@ def init_db():
             model_name TEXT NOT NULL,
             accuracy REAL NOT NULL,
             total_questions INTEGER NOT NULL,
-            avg_latency REAL
+            avg_latency REAL,
+            retrieval_type TEXT
         )
     ''')
+    
+    # Simple migration: check if column exists, if not add it
+    cursor.execute("PRAGMA table_info(runs)")
+    columns = [info[1] for info in cursor.fetchall()]
+    if "retrieval_type" not in columns:
+        print("Migrating DB: Adding 'retrieval_type' column...")
+        cursor.execute("ALTER TABLE runs ADD COLUMN retrieval_type TEXT")
+    
     conn.commit()
     conn.close()
 
-def log_to_db(accuracy, total_questions, avg_latency, model_name):
+def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type):
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     timestamp = datetime.now().isoformat()
     cursor.execute('''
-        INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (timestamp, model_name, accuracy, total_questions, avg_latency))
+        INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type))
     conn.commit()
     conn.close()
     print(f"Run metrics logged to '{DB_PATH}'")
@@ -113,6 +122,7 @@ def main():
         bot_answer = response_data["answer"]
         retrieved_chunks = response_data.get("retrieved_chunks", [])
         model_used = response_data.get("model", "unknown")
+        retrieval_type_used = response_data.get("retrieval_type", "unknown")
         
         # Judge the answer
         is_correct = evaluate_answer(question, bot_answer, gold_answer)
@@ -133,6 +143,7 @@ def main():
             "bot_answer": bot_answer,
             "retrieved_chunks": retrieved_chunks,
             "model_used": model_used,
+            "retrieval_type": retrieval_type_used,
             "latency_seconds": latency,
             "is_correct": is_correct,
             "citation_match": citation_match
@@ -168,7 +179,10 @@ def main():
     
     # Log to SQLite Database
     try:
-        log_to_db(accuracy, len(qa_pairs), latency, GENERATION_MODEL)
+        # Since retrieval type is constant per run in this architecture, we use the last one seen or default
+        # But logically should be consistent.
+        final_retrieval_type = results[0]["retrieval_type"] if results else "unknown"
+        log_to_db(accuracy, len(qa_pairs), latency, GENERATION_MODEL, final_retrieval_type)
     except Exception as e:
         print(f"Warning: Failed to log to database: {e}")
 
