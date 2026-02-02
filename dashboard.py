@@ -10,7 +10,15 @@ def load_data():
         return pd.DataFrame()
     
     conn = sqlite3.connect(DB_PATH)
-    query = "SELECT * FROM runs ORDER BY timestamp DESC"
+    query = """
+    SELECT 
+        r.*, 
+        ic.chunk_size, 
+        ic.overlap 
+    FROM runs r
+    LEFT JOIN ingestion_configs ic ON r.ingestion_config_id = ic.id
+    ORDER BY r.timestamp DESC
+    """
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
@@ -53,10 +61,13 @@ def main():
             "timestamp": "Time",
             "model_name": "Model",
             "retrieval_type": "Method",
+            "chunk_size": "Chunk Size",
+            "overlap": "Overlap",
             "accuracy": "Accuracy",
             "total_questions": "Questions",
             "avg_latency": "Latency (avg)",
-            "id": None 
+            "id": None ,
+            "ingestion_config_id": None
         }
     )
     

@@ -1,0 +1,30 @@
+{
+    "metadata": {
+        "model": "llama3.2",
+        "execution_timestamp": "20260201_185657",
+        "accuracy": "100.00%",
+        "total_questions": 1,
+        "correct_answers": 1
+    },
+    "results": [
+        {
+            "timestamp": "2026-02-01T18:56:57.857787",
+            "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+            "gold_answer": "2.5 Nm",
+            "expected_location": "Maint_Schedule_Commercial_Fleet.pdf",
+            "bot_answer": "The recommended torque setting for the Rotor Arm screws on the Falcon X1 is 2.5 Nm, as specified in SOP-01 | Rev: 2.4, and also mentioned in step 4 of the installation steps for the Rotor Arm assembly.\n\n*References:*\n\u2022 Slack API (Page Unknown)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)",
+            "retrieved_chunks": [
+                "Q: <@U0A5BUYTAG7> What is the torque setting?\n A: Thinking...\n A: According to SOP-01 | Rev: 2.4, the torque setting for screws is 2.5 Nm.\n\n*References:*\n\u2022 Maint_Schedule_Commercial_Fleet.pdf (Page 1)\n\u2022 TechNote_Firmware_Update_v4.0.pdf (Page 1)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 1)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 2)",
+                "Q: <@U0A5BUYTAG7> What is the torque setting for the rotor arm screws?",
+                "\u25cf Step 3: Tighten screws in a cross pattern (Top-Left, Bottom-Right, Top-Right,\nBottom-Left) to ensure even seating.\n\u25cf Step 4: Torque all screws to 2.5 Nm.\n\u25cb Note: Over-torquing may crack the carbon fiber mount. Under-torquing may\ncause vibrations during flight.",
+                "-100).\n2. Required Tools\n\u25cf Torque Driver set to 2.5 Nm\n\u25cf Loctite 243 (Blue)\n\u25cf Hex Key 3mm\n3. Installation Steps WARNING: Ensure the battery is disconnected before beginning\nassembly.\n\u25cf Step 1: Align the Rotor Arm (RA-400) with the mounting bracket on the Main Chassis.\nEnsure the red arrow on the arm",
+                "Q: Can I use the spare arms from my Falcon X1 on my new Falcon Pro? They look the same.\n A: Parts_Guy: Physically, yes. They are both Part #RA-400.\n A: Parts_Guy: BUT... the motors are different.\n A: Parts_Guy: The X1 uses 800kV motors, the Pro uses 950kV. So you can use the carbon arm, but you have to swap the motor itself over.\n A: OP_Flyer: Got it. Arm is same, motor is different. I'll swap them."
+            ],
+            "model_used": "llama3.2",
+            "retrieval_type": "semantic-rerank",
+            "latency_seconds": 12.104197025299072,
+            "is_correct": true,
+            "citation_match": false
+        }
+    ]
+}

@@ -73,6 +73,10 @@ def init_db():
         print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'retrieval_type' column...")
         cursor.execute("ALTER TABLE runs ADD COLUMN retrieval_type TEXT")
     
+    if "ingestion_config_id" not in columns:
+        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'ingestion_config_id' column...")
+        cursor.execute("ALTER TABLE runs ADD COLUMN ingestion_config_id INTEGER")
+    
     conn.commit()
     conn.close()
     print(f"[{datetime.now().isoformat()}] INFO: Database initialized.")
@@ -83,10 +87,24 @@ def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     timestamp = datetime.now().isoformat()
+    
+    # Get latest ingestion config
+    ingestion_config_id = None
+    try:
+        cursor.execute("SELECT id FROM ingestion_configs ORDER BY id DESC LIMIT 1")
+        result = cursor.fetchone()
+        if result:
+            ingestion_config_id = result[0]
+            print(f"[{datetime.now().isoformat()}] INFO: Linked to Ingestion Config ID: {ingestion_config_id}")
+        else:
+            print(f"[{datetime.now().isoformat()}] WARNING: No ingestion config found.")
+    except Exception as e:
+        print(f"[{datetime.now().isoformat()}] WARNING: Could not fetch ingestion config: {e}")
+
     cursor.execute('''
-        INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type))
+        INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type, ingestion_config_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type, ingestion_config_id))
     
     run_id = cursor.lastrowid
     

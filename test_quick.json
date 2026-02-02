@@ -1,0 +1,9 @@
+{
+    "qa_pairs": [
+        {
+            "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+            "answer": "2.5 Nm",
+            "location": "Maint_Schedule_Commercial_Fleet.pdf"
+        }
+    ]
+}

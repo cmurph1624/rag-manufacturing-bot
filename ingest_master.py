@@ -1,13 +1,27 @@
 import os
+import sys
+
+print("Initializing Ingestion Script... (Importing libraries)", flush=True)
+
+import shutil
 import json
 import ssl
 import certifi
+
+print("Importing ChromaDB...", flush=True)
 import chromadb
+print("Importing PDFPlumber...", flush=True)
 import pdfplumber
+print("Importing Ollama...", flush=True)
 import ollama
 from dotenv import load_dotenv
+print("Importing Slack SDK...", flush=True)
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+# from tqdm import tqdm # Removing explicit tqdm import if unused or re-adding if needed, but keeping simple for now
+import argparse
+
+print("Imports complete.", flush=True)
 
 # --- Configuration ---
 load_dotenv()
@@ -21,9 +35,9 @@ EMBEDDING_MODEL = "nomic-embed-text"
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_CHANNEL_ID = os.getenv("SLACK_CHANNEL_ID")
 
-# Chunking Settings
-CHUNK_SIZE = 1000
-OVERLAP = 200
+# Defaults
+DEFAULT_CHUNK_SIZE = 1000
+DEFAULT_OVERLAP = 200
 
 def get_embedding(text):
     """Generates an embedding vector using Ollama."""
@@ -137,6 +151,56 @@ def ingest_slack_history(client, channel_id, collection):
 
 # --- Main Execution ---
 def main():
+    parser = argparse.ArgumentParser(description="Ingest documents into ChromaDB.")
+    parser.add_argument("--chunk_size", type=int, default=DEFAULT_CHUNK_SIZE, help="Size of text chunks")
+    parser.add_argument("--overlap", type=int, default=DEFAULT_OVERLAP, help="Overlap between chunks")
+    parser.add_argument("--reset", action="store_true", help="Reset the database before ingestion")
+    args = parser.parse_args()
+    
+    # Handle Reset
+    if args.reset:
+        if os.path.exists(DB_PATH):
+            print(f"Resetting database: Removing {DB_PATH}...")
+            shutil.rmtree(DB_PATH)
+        else:
+            print("Database path not found, nothing to reset.")
+    
+    chunk_size = args.chunk_size
+    overlap = args.overlap
+    
+    # Log configuration to DB
+    try:
+        import sqlite3
+        from datetime import datetime
+        
+        conn = sqlite3.connect("evaluation_history.db")
+        cursor = conn.cursor()
+        
+        # Create table if not exists
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ingestion_configs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                chunk_size INTEGER NOT NULL,
+                overlap INTEGER NOT NULL,
+                embedding_model TEXT NOT NULL
+            )
+        ''')
+        
+        cursor.execute('''
+            INSERT INTO ingestion_configs (timestamp, chunk_size, overlap, embedding_model)
+            VALUES (?, ?, ?, ?)
+        ''', (datetime.now().isoformat(), chunk_size, overlap, EMBEDDING_MODEL))
+        
+        conn.commit()
+        conn.close()
+        print(f"Logged ingestion config: Chunk={chunk_size}, Overlap={overlap}, Model={EMBEDDING_MODEL}")
+        
+    except Exception as e:
+        print(f"Warning: Failed to log ingestion config to database: {e}")
+    
+    print(f"Starting ingestion with Chunk Size: {chunk_size}, Overlap: {overlap}")
+
     # 1. Setup Database
     client = chromadb.PersistentClient(path=DB_PATH)
     collection = client.get_or_create_collection(name=COLLECTION_NAME)
@@ -149,15 +213,19 @@ def main():
 
     # 3. Process Local Files (PDFs and JSONs)
     if os.path.exists(PDF_FOLDER):
-        for filename in os.listdir(PDF_FOLDER):
+        files = os.listdir(PDF_FOLDER)
+        print(f"Found {len(files)} files in {PDF_FOLDER}")
+        
+        for filename in files:
             file_path = os.path.join(PDF_FOLDER, filename)
             
             # PDF Processing
             if filename.endswith(".pdf"):
-                print(f"Processing PDF: {filename}...")
+                print(f"Processing PDF: {filename}...", flush=True) 
                 pages = process_pdf(file_path)
                 for page_text, page_num in pages:
-                    text_chunks = chunk_text(page_text, CHUNK_SIZE, OVERLAP)
+                    print(f"  - Page {page_num}", flush=True)
+                    text_chunks = chunk_text(page_text, chunk_size, overlap)
                     for i, chunk in enumerate(text_chunks):
                         embedding = get_embedding(chunk)
                         if embedding:
@@ -170,7 +238,7 @@ def main():
 
             # JSON Processing
             elif filename.endswith(".json"):
-                print(f"Processing JSON: {filename}...")
+                # print(f"Processing JSON: {filename}...") # tqdm handles this
                 json_chunks = process_json(file_path)
                 for text, thread_id in json_chunks:
                     embedding = get_embedding(text)
