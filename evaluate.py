@@ -44,9 +44,11 @@ def init_db():
             timestamp TEXT NOT NULL,
             model_name TEXT NOT NULL,
             accuracy REAL NOT NULL,
+            verified_accuracy REAL,
             total_questions INTEGER NOT NULL,
             avg_latency REAL,
-            retrieval_type TEXT
+            retrieval_type TEXT,
+            ingestion_config_id INTEGER
         )
     ''')
     
@@ -59,6 +61,7 @@ def init_db():
             gold_answer TEXT,
             bot_answer TEXT,
             is_correct BOOLEAN,
+            verified_correct BOOLEAN,
             citation_match BOOLEAN,
             latency REAL,
             retrieval_type TEXT,
@@ -69,13 +72,29 @@ def init_db():
     # Simple migration: check if column exists, if not add it
     cursor.execute("PRAGMA table_info(runs)")
     columns = [info[1] for info in cursor.fetchall()]
+    
     if "retrieval_type" not in columns:
-        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'retrieval_type' column...")
+        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'retrieval_type' column to runs...")
         cursor.execute("ALTER TABLE runs ADD COLUMN retrieval_type TEXT")
     
     if "ingestion_config_id" not in columns:
-        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'ingestion_config_id' column...")
+        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'ingestion_config_id' column to runs...")
         cursor.execute("ALTER TABLE runs ADD COLUMN ingestion_config_id INTEGER")
+
+    if "verified_accuracy" not in columns:
+        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'verified_accuracy' column to runs...")
+        cursor.execute("ALTER TABLE runs ADD COLUMN verified_accuracy REAL")
+        # Initialize verified_accuracy with accuracy for existing records
+        cursor.execute("UPDATE runs SET verified_accuracy = accuracy")
+
+    cursor.execute("PRAGMA table_info(run_details)")
+    detail_columns = [info[1] for info in cursor.fetchall()]
+
+    if "verified_correct" not in detail_columns:
+        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'verified_correct' column to run_details...")
+        cursor.execute("ALTER TABLE run_details ADD COLUMN verified_correct BOOLEAN")
+        # Initialize verified_correct with is_correct for existing records
+        cursor.execute("UPDATE run_details SET verified_correct = is_correct")
     
     conn.commit()
     conn.close()
@@ -99,29 +118,38 @@ def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type
         else:
             print(f"[{datetime.now().isoformat()}] WARNING: No ingestion config found.")
     except Exception as e:
-        print(f"[{datetime.now().isoformat()}] WARNING: Could not fetch ingestion config: {e}")
+        # ingestion_configs table might not exist yet if check_db hasn't been run or ingest_master logic differs
+        print(f"[{datetime.now().isoformat()}] WARNING: Could not fetch ingestion config (table might be missing?): {e}")
+
+    # For new runs, verified_accuracy starts as equal to accuracy
+    verified_accuracy = accuracy
 
     cursor.execute('''
-        INSERT INTO runs (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type, ingestion_config_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (timestamp, model_name, accuracy, total_questions, avg_latency, retrieval_type, ingestion_config_id))
+        INSERT INTO runs (timestamp, model_name, accuracy, verified_accuracy, total_questions, avg_latency, retrieval_type, ingestion_config_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (timestamp, model_name, accuracy, verified_accuracy, total_questions, avg_latency, retrieval_type, ingestion_config_id))
     
     run_id = cursor.lastrowid
     
     if detailed_results:
         print(f"[{datetime.now().isoformat()}] INFO: Logging {len(detailed_results)} detailed results for run {run_id}...")
         for res in detailed_results:
+            is_correct = res['is_correct']
+            # Default verified_correct to is_correct
+            verified_correct = is_correct
+            
             cursor.execute('''
                 INSERT INTO run_details (
-                    run_id, question, gold_answer, bot_answer, is_correct, 
+                    run_id, question, gold_answer, bot_answer, is_correct, verified_correct,
                     citation_match, latency, retrieval_type
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 run_id, 
                 res['question'], 
                 res['gold_answer'], 
                 res['bot_answer'], 
-                res['is_correct'], 
+                is_correct,
+                verified_correct,
                 res['citation_match'], 
                 res['latency_seconds'], 
                 res.get('retrieval_type', 'unknown')
