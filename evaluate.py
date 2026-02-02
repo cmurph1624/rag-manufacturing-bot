@@ -1,15 +1,41 @@
-import json
-import ollama
-import os
+import sys
 import time
-import sqlite3
 from datetime import datetime
-from rag_logic import generate_answer, GENERATION_MODEL
-from tqdm import tqdm
+
+print(f"[{datetime.now().isoformat()}] INFO: Initializing evaluation script...")
+
+print(f"[{datetime.now().isoformat()}] INFO: Importing standard libraries...")
+import json
+import os
+import sqlite3
+
+print(f"[{datetime.now().isoformat()}] INFO: Importing external libraries (this may take a moment)...")
+try:
+    import ollama
+    print(f"[{datetime.now().isoformat()}] INFO: 'ollama' imported successfully.")
+except ImportError as e:
+    print(f"[{datetime.now().isoformat()}] ERROR: Failed to import 'ollama': {e}")
+    sys.exit(1)
+
+try:
+    from tqdm import tqdm
+    print(f"[{datetime.now().isoformat()}] INFO: 'tqdm' imported successfully.")
+except ImportError as e:
+    print(f"[{datetime.now().isoformat()}] ERROR: Failed to import 'tqdm': {e}")
+    sys.exit(1)
+
+print(f"[{datetime.now().isoformat()}] INFO: Importing internal modules...")
+try:
+    from rag_logic import generate_answer, GENERATION_MODEL, DEFAULT_RETRIEVAL_STRATEGY
+    print(f"[{datetime.now().isoformat()}] INFO: 'rag_logic' imported successfully. Active Strategy: {DEFAULT_RETRIEVAL_STRATEGY}")
+except ImportError as e:
+    print(f"[{datetime.now().isoformat()}] ERROR: Failed to import 'rag_logic': {e}")
+    sys.exit(1)
 
 DB_PATH = "evaluation_history.db"
 
 def init_db():
+    print(f"[{datetime.now().isoformat()}] INFO: Connecting to database '{DB_PATH}'...")
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('''
@@ -44,13 +70,15 @@ def init_db():
     cursor.execute("PRAGMA table_info(runs)")
     columns = [info[1] for info in cursor.fetchall()]
     if "retrieval_type" not in columns:
-        print("Migrating DB: Adding 'retrieval_type' column...")
+        print(f"[{datetime.now().isoformat()}] INFO: Migrating DB: Adding 'retrieval_type' column...")
         cursor.execute("ALTER TABLE runs ADD COLUMN retrieval_type TEXT")
     
     conn.commit()
     conn.close()
+    print(f"[{datetime.now().isoformat()}] INFO: Database initialized.")
 
 def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type, detailed_results=None):
+    print(f"[{datetime.now().isoformat()}] INFO: Logging results to database...")
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -63,7 +91,7 @@ def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type
     run_id = cursor.lastrowid
     
     if detailed_results:
-        print(f"Logging {len(detailed_results)} detailed results for run {run_id}...")
+        print(f"[{datetime.now().isoformat()}] INFO: Logging {len(detailed_results)} detailed results for run {run_id}...")
         for res in detailed_results:
             cursor.execute('''
                 INSERT INTO run_details (
@@ -83,15 +111,17 @@ def log_to_db(accuracy, total_questions, avg_latency, model_name, retrieval_type
             
     conn.commit()
     conn.close()
-    print(f"Run metrics and details logged to '{DB_PATH}'")
+    print(f"[{datetime.now().isoformat()}] INFO: Run metrics and details successfully logged.")
 
 # Configuration
 TEST_SET_PATH = "test_set.json"
 JUDGE_MODEL = "llama3.1"  # Using a larger model (8B) for better reasoning as a judge
 
 def load_test_set(path):
+    print(f"[{datetime.now().isoformat()}] INFO: Loading test set from '{path}'...")
     with open(path, 'r') as f:
         data = json.load(f)
+    print(f"[{datetime.now().isoformat()}] INFO: Test set loaded successfully.")
     return data["qa_pairs"]
 
 def evaluate_answer(question, bot_answer, gold_answer):
@@ -133,27 +163,34 @@ def evaluate_answer(question, bot_answer, gold_answer):
             # Fallback if the model is chatty
             return "CORRECT" in judgment
     except Exception as e:
-        print(f"Error evaluating answer: {e}")
+        print(f"[{datetime.now().isoformat()}] ERROR: Error evaluating answer: {e}")
         return False
 
 def main():
-    print("Loading test set...")
+    print(f"[{datetime.now().isoformat()}] INFO: Starting main execution...")
     qa_pairs = load_test_set(TEST_SET_PATH)
     
-    print(f"Loaded {len(qa_pairs)} QA pairs.")
+    print(f"[{datetime.now().isoformat()}] INFO: Loaded {len(qa_pairs)} QA pairs.")
     
     correct_count = 0
     results = []
     
-    print("Starting evaluation...")
-    for item in tqdm(qa_pairs):
+    print(f"[{datetime.now().isoformat()}] INFO: Starting evaluation loop...")
+    total_tests = len(qa_pairs)
+    for i, item in enumerate(tqdm(qa_pairs)):
         question = item["question"]
+        print(f"\n[{datetime.now().isoformat()}] INFO: [{i+1}/{total_tests}] Running test: {question}")
         gold_answer = item["answer"]
         expected_location = item.get("location", "N/A")
         
         # Get bot's answer
         start_time = time.time()
-        response_data = generate_answer(question)
+        try:
+            response_data = generate_answer(question)
+        except Exception as e:
+            print(f"[{datetime.now().isoformat()}] ERROR: Failed to generate answer for question '{question}': {e}")
+            response_data = {"answer": f"Error: {e}", "retrieved_chunks": [], "model": "error", "retrieval_type": "error"}
+
         end_time = time.time()
         latency = end_time - start_time
         
@@ -163,7 +200,9 @@ def main():
         retrieval_type_used = response_data.get("retrieval_type", "unknown")
         
         # Judge the answer
+        print(f"[{datetime.now().isoformat()}] INFO: Judging answer...")
         is_correct = evaluate_answer(question, bot_answer, gold_answer)
+        print(f"[{datetime.now().isoformat()}] INFO: Judgment: {'CORRECT' if is_correct else 'INCORRECT'}")
         
         if is_correct:
             correct_count += 1
@@ -188,7 +227,7 @@ def main():
         })
         
     accuracy = (correct_count / len(qa_pairs)) * 100
-    print(f"\nEvaluation Complete!")
+    print(f"\n[{datetime.now().isoformat()}] INFO: Evaluation Complete!")
     print(f"Accuracy: {accuracy:.2f}% ({correct_count}/{len(qa_pairs)})")
     
     # Save detailed results with timestamp
@@ -213,7 +252,7 @@ def main():
 
     with open(filepath, "w") as f:
         json.dump(final_output, f, indent=4)
-    print(f"Detailed results saved to '{filepath}'")
+    print(f"[{datetime.now().isoformat()}] INFO: Detailed results saved to '{filepath}'")
     
     # Log to SQLite Database
     try:
@@ -222,7 +261,7 @@ def main():
         final_retrieval_type = results[0]["retrieval_type"] if results else "unknown"
         log_to_db(accuracy, len(qa_pairs), latency, GENERATION_MODEL, final_retrieval_type, results)
     except Exception as e:
-        print(f"Warning: Failed to log to database: {e}")
+        print(f"[{datetime.now().isoformat()}] WARNING: Failed to log to database: {e}")
 
 if __name__ == "__main__":
     main()

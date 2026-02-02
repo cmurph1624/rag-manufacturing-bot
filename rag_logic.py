@@ -7,8 +7,11 @@ from retrieval import RetrievalFactory
 load_dotenv()
 
 # Configuration
+import os
+
+# Configuration
 GENERATION_MODEL = "llama3.2"
-DEFAULT_RETRIEVAL_STRATEGY = "semantic"
+DEFAULT_RETRIEVAL_STRATEGY = os.getenv("RETRIEVAL_STRATEGY", "semantic")
 
 def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETRIEVAL_STRATEGY) -> Dict[str, Any]:
     """
@@ -34,7 +37,8 @@ def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETR
             return {
                  "answer": "I couldn't find any relevant documents in the database.",
                  "retrieved_chunks": [],
-                 "model": GENERATION_MODEL
+                 "model": GENERATION_MODEL,
+                 "retrieval_type": retrieval_strategy_type
             }
 
         # Combine documents into context text
