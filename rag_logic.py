@@ -45,18 +45,14 @@ def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETR
         context_text = "\n\n---\n\n".join(documents)
 
         # Step C: Construct Prompt
-        system_instruction = (
-            "You are a helpful manufacturing support assistant. "
-            "Answer the question using ONLY the following context. "
-            "If you don't know, say you don't know."
-        )
+        from prompts.answer_prompt import SYSTEM_INSTRUCTION, format_user_prompt
         
-        user_prompt_content = f"Context:\n{context_text}\n\nQuestion: {user_query}"
+        user_prompt_content = format_user_prompt(context_text, user_query)
 
         # Step D: Generate
         print("Sending prompt to Ollama...")
         response = ollama.chat(model=GENERATION_MODEL, messages=[
-            {'role': 'system', 'content': system_instruction},
+            {'role': 'system', 'content': SYSTEM_INSTRUCTION},
             {'role': 'user', 'content': user_prompt_content},
         ])
 
