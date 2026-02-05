@@ -14,7 +14,9 @@ def load_data():
     SELECT 
         r.*, 
         ic.chunk_size, 
-        ic.overlap 
+        ic.overlap,
+        ic.ingestion_type,
+        ic.configuration_json
     FROM runs r
     LEFT JOIN ingestion_configs ic ON r.ingestion_config_id = ic.id
     ORDER BY r.timestamp DESC
@@ -83,6 +85,40 @@ def main():
 
     display_df['avg_latency'] = display_df['avg_latency'].apply(lambda x: f"{x:.2f}s")
     
+    # Process Ingestion Config for Display
+    def format_ingestion_config(row):
+        i_type = row.get('ingestion_type')
+        config_json = row.get('configuration_json')
+        
+        # Fallback for old runs
+        if not i_type:
+            # If chunk_size exists, assume standard
+            if pd.notna(row.get('chunk_size')) and row.get('chunk_size') != 0:
+                return f"Standard (C={row['chunk_size']}, O={row['overlap']})"
+            return "Unknown"
+
+        if i_type == "standard":
+            # Prefer JSON if available, else columns
+            c_size = row.get('chunk_size')
+            overlap = row.get('overlap')
+            # Extract from JSON if present?
+            return f"Standard (C={c_size}, O={overlap})"
+        
+        elif i_type == "semantic":
+            # Parse JSON to get threshold
+            try:
+                import json
+                if config_json:
+                    conf = json.loads(config_json)
+                    return f"Semantic (Thresh={conf.get('semantic_threshold')})"
+            except:
+                pass
+            return "Semantic"
+            
+        return i_type
+
+    display_df['ingest_details'] = display_df.apply(format_ingestion_config, axis=1)
+
     # Selection
     st.markdown("### Select a Run to View Details")
     
@@ -92,7 +128,7 @@ def main():
 
     # explicit column order
     column_order = [
-         'timestamp', 'model_name', 'retrieval_type', 'chunk_size', 'overlap', 
+         'timestamp', 'model_name', 'retrieval_type', 'ingest_details', 
          'accuracy', 'verified_accuracy', 'total_questions', 'avg_latency',
          'id', 'ingestion_config_id'
     ]
@@ -111,8 +147,7 @@ def main():
             "timestamp": "Time",
             "model_name": "Model",
             "retrieval_type": "Method",
-            "chunk_size": "Chunk Size",
-            "overlap": "Overlap",
+            "ingest_details": "Ingestion Config",
             "accuracy": "Raw Accuracy",
             "verified_accuracy": "Verified Accuracy",
             "total_questions": "Questions",

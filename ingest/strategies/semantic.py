@@ -135,6 +135,34 @@ class SemanticIngestionStrategy(IngestionStrategy):
                      # Existing logic was to treat whole thread as one chunk.
                      # Semantic chunking on conversation structure is tricky. 
                      # Let's keep the existing logic for JSONs for now as it makes sense for Q&A pairs to stay together.
-                     pass 
+                     json_chunks = process_json(file_path)
+                     for text, thread_id in json_chunks:
+                        embedding = get_embedding(text)
+                        if embedding:
+                            collection.upsert(
+                                ids=[f"{filename}_{thread_id}"],
+                                documents=[text],
+                                embeddings=[embedding],
+                                metadatas=[{"source": filename, "page": 0, "type": "conversation"}]
+                            )
+
+        # 2. Process Live Slack Data
+        slack_client = get_slack_client()
+        slack_channel_id = os.getenv("SLACK_CHANNEL_ID")
+        
+        if slack_client and slack_channel_id:
+            for combined_text, ts in fetch_slack_history(slack_client, slack_channel_id):
+                # For Slack, threads are "natural" semantic units. 
+                # We could split them, but context (Q&A) is best kept together.
+                # So we treat the whole thread as a chunk.
+                embedding = get_embedding(combined_text)
+                if embedding:
+                    collection.upsert(
+                        ids=[f"slack_{ts}"],
+                        embeddings=[embedding],
+                        metadatas=[{"source": "Slack API", "timestamp": ts, "type": "tribal_knowledge"}],
+                        documents=[combined_text]
+                    )
+                    print(f"Ingested Slack Thread: {combined_text[:40]}...", flush=True)
 
         print(f"--- Ingestion Complete ({self.type}) ---", flush=True)
