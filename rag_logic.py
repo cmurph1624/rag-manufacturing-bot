@@ -21,6 +21,30 @@ def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETR
     3. Format with citations
     """
     try:
+        # Step A: Safety Check
+        print("Checking safety with Llama Guard (1B)...")
+        import time
+        start_time = time.time()
+        
+        # Use local 1B model which is faster/lighter
+        # keep_alive=0 ensures we don't hog VRAM if not needed, though 1B is small.
+        safety_response = ollama.chat(model='llama-guard3:1b', messages=[
+            {'role': 'user', 'content': user_query},
+        ], keep_alive=0)
+        
+        print(f"Safety check complete in {time.time() - start_time:.2f}s")
+        
+        # Check if response indicates unsafe content
+        if 'unsafe' in safety_response['message']['content'].strip().lower():
+             print(f"Unsafe request detected: {safety_response['message']['content']}")
+             return {
+                 "answer": "I am unable to help with this request as it has been deemed unsafe",
+                 "retrieved_chunks": [],
+                 "model": "llama-guard3:1b",
+                 "retrieval_type": "blocked"
+             }
+
+
         # Step B: Search (using Strategy)
         strategy = RetrievalFactory.get_strategy(retrieval_strategy_type)
         retrieval_result = strategy.retrieve(user_query)

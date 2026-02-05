@@ -9,7 +9,27 @@ import json
 import os
 import sqlite3
 
+# Set offline mode to prevent Hugging Face/Transformers from hanging on network calls/file locks
+# This must be set before any transformers imports
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 print(f"[{datetime.now().isoformat()}] INFO: Importing external libraries (this may take a moment)...")
+
+# Validating environment and pre-loading heavy models
+# This must happen BEFORE other imports (especially ollama) to avoid lockups
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    # Force pre-load the reranker model for safety
+    print(f"[{datetime.now().isoformat()}] INFO: Pre-loading reranker model (BAAI/bge-reranker-v2-m3)...")
+    from retrieval.factory import RetrievalFactory
+    RetrievalFactory.get_strategy("semantic-rerank")
+    print(f"[{datetime.now().isoformat()}] INFO: Reranker model pre-loaded successfully.")
+except Exception as e:
+    print(f"[{datetime.now().isoformat()}] WARNING: Pre-loading reranker failed: {e}")
+
 try:
     import ollama
     print(f"[{datetime.now().isoformat()}] INFO: 'ollama' imported successfully.")
@@ -25,6 +45,11 @@ except ImportError as e:
     sys.exit(1)
 
 print(f"[{datetime.now().isoformat()}] INFO: Importing internal modules...")
+
+# Pre-load Reranker BEFORE rag_logic/ollama to prevent deadlocks
+# This ensures PyTorch initializes cleanly first
+
+
 try:
     from rag_logic import generate_answer, GENERATION_MODEL, DEFAULT_RETRIEVAL_STRATEGY
     print(f"[{datetime.now().isoformat()}] INFO: 'rag_logic' imported successfully. Active Strategy: {DEFAULT_RETRIEVAL_STRATEGY}")
