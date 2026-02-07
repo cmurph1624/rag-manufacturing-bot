@@ -10,7 +10,7 @@ load_dotenv()
 import os
 
 # Configuration
-GENERATION_MODEL = "llama3.2"
+GENERATION_MODEL = os.getenv("LLM_MODEL_NAME", "llama")
 DEFAULT_RETRIEVAL_STRATEGY = os.getenv("RETRIEVAL_STRATEGY", "semantic")
 
 def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETRIEVAL_STRATEGY) -> Dict[str, Any]:
@@ -74,13 +74,15 @@ def generate_answer(user_query: str, retrieval_strategy_type: str = DEFAULT_RETR
         user_prompt_content = format_user_prompt(context_text, user_query)
 
         # Step D: Generate
-        print("Sending prompt to Ollama...")
-        response = ollama.chat(model=GENERATION_MODEL, messages=[
-            {'role': 'system', 'content': SYSTEM_INSTRUCTION},
-            {'role': 'user', 'content': user_prompt_content},
-        ])
+        print(f"Sending prompt to LLM (Model: {GENERATION_MODEL})...")
 
-        answer = response['message']['content']
+        from llm import LLMFactory
+        llm = LLMFactory.get_llm(GENERATION_MODEL) 
+        
+        answer = llm.generate_response(
+            system_instruction=SYSTEM_INSTRUCTION,
+            user_prompt=user_prompt_content
+        )
 
         # Step F: Citations
         citations = []

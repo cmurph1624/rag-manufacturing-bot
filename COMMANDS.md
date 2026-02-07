@@ -42,6 +42,19 @@ python3 evaluate.py
 # Currently evaluate.py typically uses the logic defined in rag_logic.py
 ```
 
+### Change LLM Model
+You can specify the LLM model using the `LLM_MODEL_NAME` environment variable.
+Supported models: `llama` (default), `mistral`.
+*Note: You can also pass any other model name available in your Ollama instance (e.g. `gemma`, `phi`).*
+
+```bash
+# Run with Mistral
+LLM_MODEL_NAME=mistral python3 evaluate.py
+
+# Run with Llama (explicit)
+LLM_MODEL_NAME=llama python3 evaluate.py
+```
+
 ---
 
 ## Dashboard (`dashboard.py`)
