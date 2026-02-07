@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import os
+import time
 
 DB_PATH = "evaluation_history.db"
 
@@ -40,6 +41,16 @@ def update_verification(run_id, detail_id, new_status):
         new_accuracy = (verified_count / total) * 100
         cursor.execute("UPDATE runs SET verified_accuracy = ? WHERE id = ?", (new_accuracy, run_id))
     
+    conn.commit()
+    conn.close()
+
+def delete_run(run_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    # Delete associated details first (foreign key constraint might not be enforced but good practice)
+    cursor.execute("DELETE FROM run_details WHERE run_id = ?", (run_id,))
+    # Delete the run itself
+    cursor.execute("DELETE FROM runs WHERE id = ?", (run_id,))
     conn.commit()
     conn.close()
 
@@ -179,12 +190,19 @@ def main():
         selected_run = selected_run_row.iloc[0]
         
         st.divider()
-        col_header, col_close = st.columns([10, 1])
+        col_header, col_close, col_delete = st.columns([8, 1, 1])
         with col_header:
             st.subheader(f"Run Details: {selected_run['timestamp']} ({selected_run['model_name']})")
         with col_close:
             if st.button("Close"):
                 st.session_state.selected_run_id = None
+                st.rerun()
+        with col_delete:
+            if st.button("Delete", type="primary"):
+                delete_run(run_id)
+                st.session_state.selected_run_id = None
+                st.toast(f"Run {run_id} deleted successfully.")
+                time.sleep(1) # Give toast a moment
                 st.rerun()
         
         # Load details
