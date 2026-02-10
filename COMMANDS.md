@@ -64,3 +64,19 @@ Launches the Streamlit dashboard to view evaluation results and history.
 ```bash
 streamlit run dashboard.py
 ```
+
+---
+
+## Slack Bot (`bot.py`)
+
+Starts the Slack bot in Socket Mode.
+
+**Prerequisites:**
+Ensure you have the following environment variables in your `.env` file:
+- `SLACK_BOT_TOKEN`: The Bot User OAuth Token (starts with `xoxb-`)
+- `SLACK_APP_TOKEN`: The App-Level Token (starts with `xapp-`)
+
+```bash
+# Start the bot
+python3 bot.py
+```
