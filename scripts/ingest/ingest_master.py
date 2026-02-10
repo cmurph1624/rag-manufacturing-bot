@@ -1,6 +1,6 @@
 import argparse
-from ingest.factory import IngestionFactory
-from ingest.base import DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP
+from src.ingest.factory import IngestionFactory
+from src.ingest.base import DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP
 
 def main():
     parser = argparse.ArgumentParser(description="Ingest documents into ChromaDB.")

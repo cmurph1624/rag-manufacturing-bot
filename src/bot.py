@@ -10,7 +10,7 @@ import ssl
 import certifi
 from slack_sdk import WebClient
 # Import the separated logic
-from rag_logic import generate_answer
+from src.rag_logic import generate_answer
 
 # Load environment variables
 load_dotenv()
@@ -24,7 +24,7 @@ client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"), ssl=ssl_context)
 app = App(client=client)
 
 # Logging Configuration
-LOGS_DIR = "logs"
+LOGS_DIR = "data/logs"
 os.makedirs(LOGS_DIR, exist_ok=True)
 
 def log_interaction(query, response_data, latency):

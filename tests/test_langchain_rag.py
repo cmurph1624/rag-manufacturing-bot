@@ -1,4 +1,4 @@
-from rag_logic import generate_answer
+from src.rag_logic import generate_answer
 import sys
 
 try:

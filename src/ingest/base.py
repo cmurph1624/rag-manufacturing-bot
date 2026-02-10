@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuration
-PDF_FOLDER = "data_pdfs"
-DB_PATH = "chroma_db"
+PDF_FOLDER = "data/pdfs"
+DB_PATH = "data/chroma_db"
 COLLECTION_NAME = "aerostream_docs"
 EMBEDDING_MODEL = "nomic-embed-text"
 

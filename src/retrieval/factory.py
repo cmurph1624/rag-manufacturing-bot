@@ -13,7 +13,7 @@ class RetrievalFactory:
         # Initialize VectorStore (Semantic)
         embeddings = OllamaEmbeddings(model="nomic-embed-text")
         vectorstore = Chroma(
-            persist_directory="./chroma_db",
+            persist_directory="./data/chroma_db",
             collection_name="aerostream_docs",
             embedding_function=embeddings
         )

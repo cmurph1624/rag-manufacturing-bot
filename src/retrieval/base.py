@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuration (Shared)
-DB_PATH = "./chroma_db"
+DB_PATH = "./data/chroma_db"
 COLLECTION_NAME = "aerostream_docs"
 EMBEDDING_MODEL = "nomic-embed-text"
 

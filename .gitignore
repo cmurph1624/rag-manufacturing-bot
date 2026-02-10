@@ -3,4 +3,12 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
-chroma_db/
+
+# Data directories
+data/chroma_db/
+data/databases/*.db
+data/logs/
+
+# IDE
+.vscode/
+.idea/

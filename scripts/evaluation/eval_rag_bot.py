@@ -24,7 +24,7 @@ try:
     
     # Force pre-load the reranker model for safety
     print(f"[{datetime.now().isoformat()}] INFO: Pre-loading reranker model (BAAI/bge-reranker-v2-m3)...")
-    from retrieval.factory import RetrievalFactory
+    from src.retrieval.factory import RetrievalFactory
     RetrievalFactory.get_strategy("semantic-rerank")
     print(f"[{datetime.now().isoformat()}] INFO: Reranker model pre-loaded successfully.")
 except Exception as e:
@@ -51,13 +51,13 @@ print(f"[{datetime.now().isoformat()}] INFO: Importing internal modules...")
 
 
 try:
-    from rag_logic import generate_answer, GENERATION_MODEL, DEFAULT_RETRIEVAL_STRATEGY
+    from src.rag_logic import generate_answer, GENERATION_MODEL, DEFAULT_RETRIEVAL_STRATEGY
     print(f"[{datetime.now().isoformat()}] INFO: 'rag_logic' imported successfully. Active Strategy: {DEFAULT_RETRIEVAL_STRATEGY}")
 except ImportError as e:
     print(f"[{datetime.now().isoformat()}] ERROR: Failed to import 'rag_logic': {e}")
     sys.exit(1)
 
-DB_PATH = "evaluation_history.db"
+DB_PATH = "data/databases/evaluation_history.db"
 
 def init_db():
     print(f"[{datetime.now().isoformat()}] INFO: Connecting to database '{DB_PATH}'...")

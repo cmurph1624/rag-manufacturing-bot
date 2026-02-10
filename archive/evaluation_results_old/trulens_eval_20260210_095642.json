@@ -1,0 +1,53 @@
+{
+  "summary": {
+    "app_id": "eval_semantic_mistral_20260210_095621",
+    "model": "mistral",
+    "retrieval_strategy": "semantic",
+    "timestamp": "2026-02-10T09:56:42.588158",
+    "total_questions": 2,
+    "successful_questions": 2,
+    "failed_questions": 0,
+    "success_rate": 100.0,
+    "avg_latency_seconds": 10.644703149795532,
+    "citation_matches": 2,
+    "citation_match_rate": 100.0,
+    "category_breakdown": {
+      "Work_Instructions": {
+        "total": 2,
+        "errors": 0
+      }
+    },
+    "errors": [],
+    "database_path": "trulens_eval.db"
+  },
+  "results": [
+    {
+      "question_id": 0,
+      "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+      "gold_answer": "The screws should be torqued to 2.5 Nm. Over-torquing may crack the carbon fiber, while under-torquing can cause vibrations.",
+      "bot_answer": " I don't have information about the specific torque setting for the Rotor Arm screws on the Falcon X1 in this context provided. However, it is essential to ensure that the screws are tightened appropriately to maintain stability during flight. It's always recommended to consult the user manual or contact the manufacturer for accurate and safe values.\n\n*References:*\n\u2022 Maint_Schedule_Commercial_Fleet.pdf (Page Unknown)\n\u2022 Slack API (Page Unknown)\n\u2022 Safety_LiPo_Battery_Handling.pdf (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 11.14423131942749,
+      "citation_match": true,
+      "retrieved_chunks_count": 7,
+      "model": "mistral",
+      "retrieval_strategy": "semantic",
+      "timestamp": "2026-02-10T09:56:32.441845"
+    },
+    {
+      "question_id": 1,
+      "question": "Which Loctite type should be used for the rotor arm assembly?",
+      "gold_answer": "Loctite 243 (Blue) should be applied to the threads.",
+      "bot_answer": " To determine the suitable Loctite type for the rotor arm assembly, we need more specific information about the material of the rotor arms and the threads they use. However, a general recommendation could be Loctite Blue (243) or Loctite Red (272), which are designed for thread locking and prevent loosening under vibration. Always refer to the manufacturer's guidelines if possible.\n\n*References:*\n\u2022 Maint_Schedule_Commercial_Fleet.pdf (Page Unknown)\n\u2022 Slack API (Page Unknown)\n\u2022 Safety_LiPo_Battery_Handling.pdf (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 10.145174980163574,
+      "citation_match": true,
+      "retrieved_chunks_count": 7,
+      "model": "mistral",
+      "retrieval_strategy": "semantic",
+      "timestamp": "2026-02-10T09:56:42.587837"
+    }
+  ]
+}
