@@ -29,6 +29,7 @@ DEFAULT_RETRIEVAL_STRATEGY = os.getenv("RETRIEVAL_STRATEGY", "semantic")
 # TrueLens global state (initialized when needed)
 _TRULENS_SESSION = None
 _TRULENS_FEEDBACKS = None
+_TRU_CHAIN_REFS = [] # Store references to prevent GC
 
 
 def _initialize_trulens_if_needed(database_path: str = "data/databases/trulens_eval.db") -> None:
@@ -210,6 +211,11 @@ def generate_answer(
                 app_id=app_id,
                 metadata=metadata
             )
+
+            # Keep strong reference to prevent GC of the chain object
+            # This is critical because TruLens feedback runs in a background thread
+            # and holds a weak reference to the app.
+            _TRU_CHAIN_REFS.append(tru_chain)
 
             # Invoke with TrueLens context (automatically records to database)
             print(f"Invoking instrumented chain for query: '{user_query}'...")

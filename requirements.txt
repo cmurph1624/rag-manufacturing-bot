@@ -18,3 +18,8 @@ sentence-transformers
 trulens-eval
 trulens-providers-langchain
 trulens-apps-langchain
+
+# Ingestion dependencies
+pdfplumber
+slack_sdk
+certifi

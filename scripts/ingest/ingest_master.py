@@ -1,4 +1,9 @@
 import argparse
+import sys
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.ingest.factory import IngestionFactory
 from src.ingest.base import DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP
 

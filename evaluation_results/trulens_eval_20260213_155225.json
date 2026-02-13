@@ -1,0 +1,53 @@
+{
+  "summary": {
+    "app_id": "eval_semantic-rerank_llama_20260213_155222",
+    "model": "llama",
+    "retrieval_strategy": "semantic-rerank",
+    "timestamp": "2026-02-13T15:52:25.842692",
+    "total_questions": 2,
+    "successful_questions": 2,
+    "failed_questions": 0,
+    "success_rate": 100.0,
+    "avg_latency_seconds": 1.6059565544128418,
+    "citation_matches": 0,
+    "citation_match_rate": 0.0,
+    "category_breakdown": {
+      "Work_Instructions": {
+        "total": 2,
+        "errors": 0
+      }
+    },
+    "errors": [],
+    "database_path": "/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db"
+  },
+  "results": [
+    {
+      "question_id": 0,
+      "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+      "gold_answer": "The screws should be torqued to 2.5 Nm. Over-torquing may crack the carbon fiber, while under-torquing can cause vibrations.",
+      "bot_answer": "Sorry, I encountered an error: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.\nCheck your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 2.298007011413574,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T15:52:24.907982"
+    },
+    {
+      "question_id": 1,
+      "question": "Which Loctite type should be used for the rotor arm assembly?",
+      "gold_answer": "Loctite 243 (Blue) should be applied to the threads.",
+      "bot_answer": "Sorry, I encountered an error: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.\nCheck your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 0.9139060974121094,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T15:52:25.842456"
+    }
+  ]
+}

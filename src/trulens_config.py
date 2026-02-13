@@ -84,33 +84,54 @@ class TrueLensConfig:
         """
         Get or create the evaluation model provider.
 
-        Currently supports Ollama via LangChain integration.
-        Future: Add OpenAI, Bedrock support based on env vars.
-
-        Returns:
-            Langchain provider instance configured for evaluation
+        Supports:
+        - Local: Ollama
+        - Cloud: Anthropic (Claude), Google (Gemini), OpenAI (GPT)
+        
+        Controlled by TRULENS_PROVIDER env var.
         """
         if self.provider is not None:
             return self.provider
 
         try:
-            # For now, we use Ollama via LangChain
-            # The Langchain provider will use the model specified in evaluation_model
-            from langchain_ollama import ChatOllama
+            provider_type = os.getenv("TRULENS_PROVIDER", "local").lower()
+            llm = None
+            
+            if provider_type == "anthropic":
+                from langchain_anthropic import ChatAnthropic
+                # Model defaults to evaluation_model or "claude-3-haiku-20240307"
+                model_name = self.evaluation_model if self.evaluation_model != "llama3.1" else "claude-3-haiku-20240307"
+                llm = ChatAnthropic(model=model_name, temperature=0.0)
+                print(f"✅ Evaluation provider initialized: Anthropic ({model_name})")
 
-            llm = ChatOllama(
-                model=self.evaluation_model,
-                temperature=0.0,  # Deterministic for evaluation
-            )
+            elif provider_type == "gemini":
+                from langchain_google_genai import ChatGoogleGenerativeAI
+                # Model defaults to evaluation_model or "gemini-1.5-flash"
+                model_name = self.evaluation_model if self.evaluation_model != "llama3.1" else "gemini-1.5-flash"
+                llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.0)
+                print(f"✅ Evaluation provider initialized: Google Gemini ({model_name})")
+
+            elif provider_type == "openai":
+                from langchain_openai import ChatOpenAI
+                model_name = self.evaluation_model if self.evaluation_model != "llama3.1" else "gpt-4o-mini"
+                llm = ChatOpenAI(model=model_name, temperature=0.0)
+                print(f"✅ Evaluation provider initialized: OpenAI ({model_name})")
+
+            else:
+                # Default to Ollama (Local)
+                from langchain_ollama import ChatOllama
+                llm = ChatOllama(
+                    model=self.evaluation_model,
+                    temperature=0.0,
+                )
+                print(f"✅ Evaluation provider initialized: Ollama ({self.evaluation_model})")
 
             # Create TrueLens LangChain provider
             self.provider = Langchain(chain=llm)
-
-            print(f"✅ Evaluation provider initialized: Ollama ({self.evaluation_model})")
             return self.provider
 
         except Exception as e:
-            raise Exception(f"Failed to initialize evaluation provider: {e}")
+            raise Exception(f"Failed to initialize evaluation provider ({os.getenv('TRULENS_PROVIDER', 'local')}): {e}")
 
     def get_feedback_functions(self) -> List[Feedback]:
         """

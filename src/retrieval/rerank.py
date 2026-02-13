@@ -7,7 +7,7 @@ def get_rerank_retriever(base_retriever):
     """
     Returns a ContextualCompressionRetriever that uses a CrossEncoder to rerank results.
     """
-    model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-v2-m3")
+    model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
     compressor = CrossEncoderReranker(model=model, top_n=5)
     return ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=base_retriever

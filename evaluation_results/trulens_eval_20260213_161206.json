@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "app_id": "eval_semantic-rerank_llama_20260213_161125",
+    "model": "llama",
+    "retrieval_strategy": "semantic-rerank",
+    "timestamp": "2026-02-13T16:12:06.853374",
+    "total_questions": 5,
+    "successful_questions": 5,
+    "failed_questions": 0,
+    "success_rate": 100.0,
+    "avg_latency_seconds": 8.216978836059571,
+    "citation_matches": 5,
+    "citation_match_rate": 100.0,
+    "category_breakdown": {
+      "Work_Instructions": {
+        "total": 5,
+        "errors": 0
+      }
+    },
+    "errors": [],
+    "database_path": "/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db"
+  },
+  "results": [
+    {
+      "question_id": 0,
+      "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+      "gold_answer": "The screws should be torqued to 2.5 Nm. Over-torquing may crack the carbon fiber, while under-torquing can cause vibrations.",
+      "bot_answer": "The recommended torque setting for the Rotor Arm screws on the Falcon X1 is 2.5 Nm.\n\n*References:*\n\u2022 Slack API (Page Unknown)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 10.521800994873047,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T16:11:36.127347"
+    },
+    {
+      "question_id": 1,
+      "question": "Which Loctite type should be used for the rotor arm assembly?",
+      "gold_answer": "Loctite 243 (Blue) should be applied to the threads.",
+      "bot_answer": "I don't know.\n\n*References:*\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)\n\u2022 Slack API (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 7.128267049789429,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T16:11:43.278421"
+    },
+    {
+      "question_id": 2,
+      "question": "What is the correct tightening pattern for the rotor arm screws?",
+      "gold_answer": "Tighten the screws in a cross pattern (Top-Left, Bottom-Right, Top-Right, Bottom-Left) to ensure even seating.",
+      "bot_answer": "The recommended tightening pattern for the rotor arm screws on the Falcon X1 is:\n\nTop-Left, Bottom-Right, Top-Right, Bottom-Left\n\n*References:*\n\u2022 Slack API (Page Unknown)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 8.195147037506104,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T16:11:51.513904"
+    },
+    {
+      "question_id": 3,
+      "question": "What action should be taken if the Falcon firmware update stalls at 99%?",
+      "gold_answer": "Unplug the USB cable and restart the drone. The update usually completes on reboot.",
+      "bot_answer": "If the firmware update stalls at 99%, you should unplug the USB cable and restart the drone. It usually completes on reboot.\n\n*References:*\n\u2022 TechNote_Firmware_Update_v4.0.pdf (Page Unknown)\n\u2022 Slack API (Page Unknown)",
+      "expected_location": "TechNote_Firmware_Update_v4.0",
+      "category": "Work_Instructions",
+      "latency_seconds": 7.737730979919434,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T16:11:59.288646"
+    },
+    {
+      "question_id": 4,
+      "question": "How do you enter DFU Mode on the drone for a firmware update?",
+      "gold_answer": "Hold the power button for 5 seconds until the drone beeps three times.",
+      "bot_answer": "I don't know how to enter DFU Mode on the drone from this information.\n\n*References:*\n\u2022 TechNote_Firmware_Update_v4.0.pdf (Page Unknown)\n\u2022 Slack API (Page Unknown)",
+      "expected_location": "TechNote_Firmware_Update_v4.0",
+      "category": "Work_Instructions",
+      "latency_seconds": 7.501948118209839,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T16:12:06.820337"
+    }
+  ]
+}

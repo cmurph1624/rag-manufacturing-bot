@@ -10,6 +10,45 @@ from ..base import (
 )
 from ..loaders import process_pdf, process_json, get_slack_client, fetch_slack_history
 
+def upsert_to_db(ids, documents, embeddings, metadatas):
+    """
+    Helper to upsert to either Chroma or Pinecone based on env var.
+    """
+    vector_db_type = os.getenv("VECTOR_DB", "chroma")
+    
+    if vector_db_type == "pinecone":
+        try:
+            from ...retrieval.pinecone_client import get_pinecone_index
+            index = get_pinecone_index(create_if_missing=True)
+            
+            vectors = []
+            for i, doc_id in enumerate(ids):
+                metadata = metadatas[i].copy()
+                metadata["text"] = documents[i] # Important: Store text in metadata for Pinecone
+                vectors.append((doc_id, embeddings[i], metadata))
+            
+            # Upsert in batches of 100 to avoid limits
+            batch_size = 100
+            for i in range(0, len(vectors), batch_size):
+                batch = vectors[i:i+batch_size]
+                index.upsert(vectors=batch)
+                print(f"    - Upserted batch of {len(batch)} to Pinecone.", flush=True)
+
+        except ImportError:
+            print("Error: Pinecone client not found. Please install pinecone-client.")
+        except Exception as e:
+            print(f"Error upserting to Pinecone: {e}")
+            
+    else:
+        # Default to Chroma
+        collection = get_chroma_collection()
+        collection.upsert(
+            ids=ids,
+            documents=documents,
+            embeddings=embeddings,
+            metadatas=metadatas
+        )
+
 class SemanticIngestionStrategy(IngestionStrategy):
     """
     Semantic ingestion strategy:
@@ -123,7 +162,7 @@ class SemanticIngestionStrategy(IngestionStrategy):
                         for i, chunk in enumerate(text_chunks):
                              embedding = get_embedding(chunk) # Re-embed the FULL chunk
                              if embedding:
-                                collection.upsert(
+                                upsert_to_db(
                                     ids=[f"{filename}_p{page_num}_c{i}"],
                                     documents=[chunk],
                                     embeddings=[embedding],
@@ -139,7 +178,7 @@ class SemanticIngestionStrategy(IngestionStrategy):
                      for text, thread_id in json_chunks:
                         embedding = get_embedding(text)
                         if embedding:
-                            collection.upsert(
+                            upsert_to_db(
                                 ids=[f"{filename}_{thread_id}"],
                                 documents=[text],
                                 embeddings=[embedding],
@@ -157,7 +196,7 @@ class SemanticIngestionStrategy(IngestionStrategy):
                 # So we treat the whole thread as a chunk.
                 embedding = get_embedding(combined_text)
                 if embedding:
-                    collection.upsert(
+                    upsert_to_db(
                         ids=[f"slack_{ts}"],
                         embeddings=[embedding],
                         metadatas=[{"source": "Slack API", "timestamp": ts, "type": "tribal_knowledge"}],

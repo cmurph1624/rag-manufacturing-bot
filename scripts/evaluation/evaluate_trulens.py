@@ -45,6 +45,8 @@ print(f"[{datetime.now().isoformat()}] INFO: Initializing TrueLens evaluation sc
 # Set offline mode to prevent Hugging Face/Transformers from hanging
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
+# Fix for MPS Out of Memory on Mac
+os.environ["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
 
 # Add project root to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -77,7 +79,7 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    from src.rag_logic import generate_answer
+    from src.rag_logic import generate_answer, _initialize_trulens_if_needed
     from src.trulens_config import initialize_trulens
 except ImportError as e:
     print(f"[{datetime.now().isoformat()}] ERROR: Failed to import internal modules: {e}")
@@ -228,12 +230,12 @@ def run_evaluation(
     print(f"{'='*60}\n")
 
     # Initialize TrueLens
-    print(f"[{datetime.now().isoformat()}] INFO: Initializing TrueLens...")
-    session, feedbacks = initialize_trulens(
-        database_path=database_path,
-        reset=False
-    )
-    print(f"[{datetime.now().isoformat()}] INFO: TrueLens initialized with {len(feedbacks)} feedback functions")
+    # print(f"[{datetime.now().isoformat()}] INFO: Initializing TrueLens...")
+    # session, feedbacks = initialize_trulens(
+    #     database_path=database_path,
+    #     reset=False
+    # )
+    # print(f"[{datetime.now().isoformat()}] INFO: TrueLens initialized with {len(feedbacks)} feedback functions")
 
     # Track results
     results = []
@@ -339,6 +341,14 @@ def run_evaluation(
                 "timestamp": datetime.now().isoformat(),
                 "error": error_msg
             })
+        
+        # Clear MPS cache to prevent OOM
+        try:
+            import torch
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+        except ImportError:
+            pass
 
     # Calculate statistics
     total_questions = len(qa_pairs)
@@ -442,8 +452,8 @@ def save_results_to_json(evaluation_data: Dict[str, Any], output_dir: str = "eva
     with open(filepath, "w") as f:
         json.dump(evaluation_data, f, indent=2)
 
-    print(f"[{datetime.now().isoformat()}] INFO: Results also saved to '{filepath}'")
-    return filepath
+        print(f"[{datetime.now().isoformat()}] INFO: Results also saved to '{filepath}'")
+        return filepath
 
 
 def parse_args():
@@ -541,6 +551,10 @@ def main():
         # Load test set
         qa_pairs = load_test_set(args.test_set, limit=args.limit)
 
+        # Initialize TrueLens in rag_logic to ensure we share the same session/DB
+        print(f"[{datetime.now().isoformat()}] INFO: Pre-initializing TrueLens in RAG logic...")
+        _initialize_trulens_if_needed(database_path=args.database)
+
         # Run evaluation
         evaluation_data = run_evaluation(
             qa_pairs=qa_pairs,
@@ -555,6 +569,9 @@ def main():
 
         # Save results to JSON
         save_results_to_json(evaluation_data)
+
+        print(f"\n[{datetime.now().isoformat()}] INFO: Waiting 15s for background feedback functions to finish...")
+        time.sleep(15)
 
         print(f"[{datetime.now().isoformat()}] INFO: Evaluation completed successfully!")
 
