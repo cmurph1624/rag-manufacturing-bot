@@ -1,0 +1,95 @@
+{
+  "summary": {
+    "app_id": "eval_semantic-rerank_mistral_20260210_174617",
+    "model": "mistral",
+    "retrieval_strategy": "semantic-rerank",
+    "timestamp": "2026-02-10T17:46:24.250864",
+    "total_questions": 5,
+    "successful_questions": 5,
+    "failed_questions": 0,
+    "success_rate": 100.0,
+    "avg_latency_seconds": 1.369756031036377,
+    "citation_matches": 0,
+    "citation_match_rate": 0.0,
+    "category_breakdown": {
+      "Work_Instructions": {
+        "total": 5,
+        "errors": 0
+      }
+    },
+    "errors": [],
+    "database_path": "/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db"
+  },
+  "results": [
+    {
+      "question_id": 0,
+      "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+      "gold_answer": "The screws should be torqued to 2.5 Nm. Over-torquing may crack the carbon fiber, while under-torquing can cause vibrations.",
+      "bot_answer": "Sorry, I encountered an error: cannot import name 'initialization' from 'transformers' (/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/venv/lib/python3.13/site-packages/transformers/__init__.py)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 2.580064058303833,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "mistral",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-10T17:46:19.981361"
+    },
+    {
+      "question_id": 1,
+      "question": "Which Loctite type should be used for the rotor arm assembly?",
+      "gold_answer": "Loctite 243 (Blue) should be applied to the threads.",
+      "bot_answer": "Sorry, I encountered an error: cannot import name 'initialization' from 'transformers' (/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/venv/lib/python3.13/site-packages/transformers/__init__.py)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 1.0787909030914307,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "mistral",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-10T17:46:21.060304"
+    },
+    {
+      "question_id": 2,
+      "question": "What is the correct tightening pattern for the rotor arm screws?",
+      "gold_answer": "Tighten the screws in a cross pattern (Top-Left, Bottom-Right, Top-Right, Bottom-Left) to ensure even seating.",
+      "bot_answer": "Sorry, I encountered an error: cannot import name 'initialization' from 'transformers' (/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/venv/lib/python3.13/site-packages/transformers/__init__.py)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 1.0831952095031738,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "mistral",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-10T17:46:22.143639"
+    },
+    {
+      "question_id": 3,
+      "question": "What action should be taken if the Falcon firmware update stalls at 99%?",
+      "gold_answer": "Unplug the USB cable and restart the drone. The update usually completes on reboot.",
+      "bot_answer": "Sorry, I encountered an error: cannot import name 'initialization' from 'transformers' (/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/venv/lib/python3.13/site-packages/transformers/__init__.py)",
+      "expected_location": "TechNote_Firmware_Update_v4.0",
+      "category": "Work_Instructions",
+      "latency_seconds": 1.0351388454437256,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "mistral",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-10T17:46:23.178922"
+    },
+    {
+      "question_id": 4,
+      "question": "How do you enter DFU Mode on the drone for a firmware update?",
+      "gold_answer": "Hold the power button for 5 seconds until the drone beeps three times.",
+      "bot_answer": "Sorry, I encountered an error: cannot import name 'initialization' from 'transformers' (/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/venv/lib/python3.13/site-packages/transformers/__init__.py)",
+      "expected_location": "TechNote_Firmware_Update_v4.0",
+      "category": "Work_Instructions",
+      "latency_seconds": 1.0715911388397217,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "mistral",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-10T17:46:24.250661"
+    }
+  ]
+}

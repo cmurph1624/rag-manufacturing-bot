@@ -46,6 +46,13 @@ print(f"[{datetime.now().isoformat()}] INFO: Initializing TrueLens evaluation sc
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
+# Add project root to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Get project root (scripts/evaluation -> scripts -> root)
+project_root = os.path.dirname(os.path.dirname(current_dir))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 print(f"[{datetime.now().isoformat()}] INFO: Importing libraries...")
 
 try:
@@ -77,8 +84,9 @@ except ImportError as e:
     sys.exit(1)
 
 # Configuration
-TEST_SET_PATH = "tests/test_set.json"
-DEFAULT_DATABASE_PATH = "data/databases/trulens_eval.db"
+# Configuration
+TEST_SET_PATH = os.path.join(project_root, "tests", "test_set.json")
+DEFAULT_DATABASE_PATH = os.path.join(project_root, "data", "databases", "trulens_eval.db")
 
 
 def load_test_set(path: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:

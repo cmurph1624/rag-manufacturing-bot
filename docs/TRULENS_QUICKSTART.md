@@ -53,21 +53,27 @@ cp .env.example .env
 Start with a small test:
 
 ```bash
-python evaluate_trulens.py --limit 5
+./scripts/run_evaluation.sh --test
+```
+
+Or directly:
+
+```bash
+python3 scripts/evaluation/evaluate_trulens.py --limit 5
 ```
 
 This will:
 - Load 5 test questions
 - Run them through your RAG system
 - Evaluate with TruLens feedback functions
-- Save results to `trulens_eval.db`
+- Save results to `data/databases/trulens_eval.db`
 
 ### 4. View Results
 
 Launch the dashboard:
 
 ```bash
-./start_dashboard.sh
+./scripts/dashboard/start_dashboard.sh
 ```
 
 Open your browser to `http://localhost:8501`
@@ -149,7 +155,13 @@ Score: 0.5 (Fair - filter info not in context)
 Run with default settings (50 questions):
 
 ```bash
-python evaluate_trulens.py
+./scripts/run_evaluation.sh
+```
+
+Or directly:
+
+```bash
+python3 scripts/evaluation/evaluate_trulens.py
 ```
 
 ### Limited Test Run
@@ -157,7 +169,13 @@ python evaluate_trulens.py
 Test with fewer questions:
 
 ```bash
-python evaluate_trulens.py --limit 10
+./scripts/run_evaluation.sh --test
+```
+
+Or:
+
+```bash
+python3 scripts/evaluation/evaluate_trulens.py --limit 10
 ```
 
 ### Custom Configuration
@@ -165,7 +183,7 @@ python evaluate_trulens.py --limit 10
 Specify model and retrieval strategy:
 
 ```bash
-python evaluate_trulens.py \
+python3 scripts/evaluation/evaluate_trulens.py \
   --model llama3.2 \
   --retrieval semantic-rerank \
   --limit 20
@@ -176,13 +194,13 @@ python evaluate_trulens.py \
 Use a specific app ID to organize evaluations:
 
 ```bash
-python evaluate_trulens.py --app-id "production_eval_v2"
+python3 scripts/evaluation/evaluate_trulens.py --app-id "production_eval_v2"
 ```
 
 ### Available Options
 
 ```bash
-python evaluate_trulens.py --help
+python3 scripts/evaluation/evaluate_trulens.py --help
 ```
 
 **Common options**:
@@ -197,13 +215,13 @@ python evaluate_trulens.py --help
 ### Launching the Dashboard
 
 ```bash
-./start_dashboard.sh
+./scripts/dashboard/start_dashboard.sh
 ```
 
 Or directly:
 
 ```bash
-python start_dashboard.py
+python3 scripts/dashboard/start_dashboard.py
 ```
 
 The dashboard opens at `http://localhost:8501`
@@ -303,7 +321,7 @@ Each file contains:
 #### Compare Performance
 
 ```bash
-python analyze_performance.py
+python3 scripts/evaluation/analyze_performance.py
 ```
 
 This script analyzes:
@@ -315,7 +333,7 @@ This script analyzes:
 #### Detailed TruLens Analysis
 
 ```bash
-python analyze_trulens_results.py
+python3 scripts/evaluation/analyze_trulens_results.py
 ```
 
 This provides:
@@ -327,7 +345,7 @@ This provides:
 #### Compare Old vs New Systems
 
 ```bash
-python compare_systems.py
+python3 scripts/evaluation/compare_systems.py
 ```
 
 Compares:
@@ -339,7 +357,7 @@ Compares:
 
 The system uses LangChain-based feedback providers. To add custom feedback:
 
-1. Edit `trulens_config.py`
+1. Edit `src/trulens_config.py`
 2. Add your custom feedback function
 3. Register it in `get_feedback_functions()`
 
@@ -364,7 +382,7 @@ cat > batch_eval.sh << 'EOF'
 #!/bin/bash
 for model in llama3.2 mistral; do
   for strategy in semantic lexical semantic-rerank; do
-    python evaluate_trulens.py \
+    python3 scripts/evaluation/evaluate_trulens.py \
       --model $model \
       --retrieval $strategy \
       --app-id "batch_${model}_${strategy}" \
@@ -394,7 +412,7 @@ jobs:
       - name: Run evaluation
         run: |
           pip install -r requirements.txt
-          python evaluate_trulens.py --limit 10
+          python3 scripts/evaluation/evaluate_trulens.py --limit 10
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:
@@ -414,7 +432,7 @@ jobs:
 ```bash
 # Close the dashboard first
 # Then run evaluation
-python evaluate_trulens.py --limit 5
+python3 scripts/evaluation/evaluate_trulens.py --limit 5
 ```
 
 #### 2. Feedback Function Errors
@@ -435,13 +453,13 @@ python evaluate_trulens.py --limit 5
 **Solution**:
 ```bash
 # Verify database exists
-ls -lh trulens_eval.db
+ls -lh data/databases/trulens_eval.db
 
 # Check database contents
-python -c "from trulens.core import TruSession; session = TruSession(); print(len(session.get_apps()))"
+python3 -c "from trulens.core import TruSession; session = TruSession(database_url='sqlite:///data/databases/trulens_eval.db'); print(len(session.get_apps()))"
 
 # Restart dashboard
-./start_dashboard.sh
+./scripts/dashboard/start_dashboard.sh
 ```
 
 #### 4. Slow Evaluation
@@ -464,7 +482,7 @@ python -c "from trulens.core import TruSession; session = TruSession(); print(le
 pip install -r requirements.txt
 
 # Verify installation
-python -c "import trulens; print(trulens.__version__)"
+python3 -c "import trulens; print(trulens.__version__)"
 ```
 
 ### Getting Help
@@ -481,7 +499,7 @@ Enable verbose logging:
 
 ```bash
 export TRULENS_LOG_LEVEL=DEBUG
-python evaluate_trulens.py --limit 5
+python3 scripts/evaluation/evaluate_trulens.py --limit 5
 ```
 
 ### Resetting Everything
@@ -490,13 +508,13 @@ If you need to start fresh:
 
 ```bash
 # Backup current database
-cp trulens_eval.db trulens_eval_backup.db
+cp data/databases/trulens_eval.db data/databases/trulens_eval_backup.db
 
 # Delete database
-rm trulens_eval.db
+rm data/databases/trulens_eval.db
 
 # Run fresh evaluation
-python evaluate_trulens.py --limit 5
+python3 scripts/evaluation/evaluate_trulens.py --limit 5
 ```
 
 ## Best Practices
@@ -517,16 +535,16 @@ Name your evaluations descriptively:
 Run evaluations regularly to catch regressions:
 ```bash
 # Weekly baseline
-python evaluate_trulens.py --app-id "weekly_baseline_$(date +%Y%m%d)"
+python3 scripts/evaluation/evaluate_trulens.py --app-id "weekly_baseline_$(date +%Y%m%d)"
 ```
 
 ### 4. Compare Configurations
 
 When testing changes, run before/after evaluations:
 ```bash
-python evaluate_trulens.py --app-id "before_change"
+python3 scripts/evaluation/evaluate_trulens.py --app-id "before_change"
 # Make your changes
-python evaluate_trulens.py --app-id "after_change"
+python3 scripts/evaluation/evaluate_trulens.py --app-id "after_change"
 ```
 
 ### 5. Archive Important Results
@@ -539,7 +557,7 @@ cp evaluation_results/trulens_eval_*.json archive/important_eval.json
 ## Next Steps
 
 - **Read**: `TRULENS_MIGRATION_PLAN.md` for implementation details
-- **Explore**: `trulens_config.py` to understand feedback functions
+- **Explore**: `src/trulens_config.py` to understand feedback functions
 - **Customize**: Add your own feedback functions
 - **Optimize**: Use analysis scripts to improve your RAG system
 - **Monitor**: Set up regular evaluation runs

@@ -1,0 +1,39 @@
+{
+  "summary": {
+    "app_id": "eval_semantic-rerank_mistral_20260210_173129",
+    "model": "mistral",
+    "retrieval_strategy": "semantic-rerank",
+    "timestamp": "2026-02-10T17:31:42.472812",
+    "total_questions": 1,
+    "successful_questions": 1,
+    "failed_questions": 0,
+    "success_rate": 100.0,
+    "avg_latency_seconds": 12.69701600074768,
+    "citation_matches": 0,
+    "citation_match_rate": 0.0,
+    "category_breakdown": {
+      "Work_Instructions": {
+        "total": 1,
+        "errors": 0
+      }
+    },
+    "errors": [],
+    "database_path": "/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db"
+  },
+  "results": [
+    {
+      "question_id": 0,
+      "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+      "gold_answer": "The screws should be torqued to 2.5 Nm. Over-torquing may crack the carbon fiber, while under-torquing can cause vibrations.",
+      "bot_answer": "I couldn't find any relevant documents in the database.",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 12.69701600074768,
+      "citation_match": false,
+      "retrieved_chunks_count": 0,
+      "model": "mistral",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-10T17:31:42.472032"
+    }
+  ]
+}

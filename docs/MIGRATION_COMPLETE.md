@@ -135,39 +135,39 @@ The new system provides:
 
 ```bash
 # Specific model and retrieval strategy
-python evaluate_trulens.py \
+python3 scripts/evaluation/evaluate_trulens.py \
   --model llama3.2 \
   --retrieval semantic-rerank \
   --limit 20
 
 # Using the wrapper script
-./run_evaluation.sh --limit 20 --model llama3.2
+./scripts/run_evaluation.sh --limit 20 --model llama3.2
 ```
 
 #### Compare Different Configurations
 
 ```bash
 # Baseline
-./run_evaluation.sh --app-id baseline_semantic --retrieval semantic
+./scripts/run_evaluation.sh --app-id baseline_semantic --retrieval semantic
 
 # Test reranking
-./run_evaluation.sh --app-id test_rerank --retrieval semantic-rerank
+./scripts/run_evaluation.sh --app-id test_rerank --retrieval semantic-rerank
 
 # Compare in dashboard
-./start_dashboard.sh
+./scripts/dashboard/start_dashboard.sh
 ```
 
 #### Analyze Results Programmatically
 
 ```bash
 # Performance analysis
-python analyze_performance.py
+python3 scripts/evaluation/analyze_performance.py
 
 # Detailed TruLens analysis
-python analyze_trulens_results.py
+python3 scripts/evaluation/analyze_trulens_results.py
 
 # Compare old vs new system
-python compare_systems.py
+python3 scripts/evaluation/compare_systems.py
 ```
 
 ### 🔧 Configuration

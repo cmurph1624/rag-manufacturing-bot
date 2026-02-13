@@ -1,10 +1,37 @@
 # RAG Manufacturing Bot
 
 This project establishes a Retrieval-Augmented Generation (RAG) bot that answers questions based on:
-1.  **PDF Documents** (stored in `data_pdfs/`)
+1.  **PDF Documents** (stored in `data/pdfs/`)
 2.  **Slack History** (ingested from a specific channel)
 
 It uses **Slack Bolt** for the bot interface, **ChromaDB** for vector storage, and **Ollama** for embeddings and generation.
+
+## Project Structure
+
+```
+rag-manufacturing-bot/
+├── src/                    # Core application code
+│   ├── bot.py             # Main Slack bot application
+│   ├── rag_logic.py       # RAG pipeline with TruLens instrumentation
+│   ├── trulens_config.py  # TruLens configuration
+│   ├── llm/               # LLM abstractions and factory
+│   ├── retrieval/         # Retrieval strategies (semantic, lexical, rerank)
+│   ├── ingest/            # Document ingestion strategies
+│   └── prompts/           # Prompt templates
+├── scripts/               # Executable scripts
+│   ├── ingest/           # Data ingestion scripts
+│   ├── evaluation/       # Evaluation and analysis scripts
+│   ├── database/         # Database utilities
+│   └── dashboard/        # Dashboard launcher scripts
+├── tests/                # Test files and test datasets
+├── data/                 # Data files (gitignored)
+│   ├── pdfs/            # PDF documents for ingestion
+│   ├── chroma_db/       # Vector database
+│   ├── databases/       # SQLite databases
+│   └── logs/            # Application logs
+├── docs/                 # Documentation
+└── archive/             # Historical files
+```
 
 ## Prerequisites
 
@@ -30,34 +57,19 @@ EMBEDDING_MODEL=nomic-embed-text # Model for embeddings
 RERANK_MODEL=bge-reranker-v2-m3  # Model for reranking (optional)
 
 # TruLens Configuration (optional)
-TRULENS_DATABASE_URL=sqlite:///trulens_eval.db
+TRULENS_DATABASE_URL=sqlite:///data/databases/trulens_eval.db
 TRULENS_LOG_LEVEL=INFO
 ```
 
 See `.env.example` for a complete template with all available options.
 
-## Files Description
+## Key Components
 
--   **`bot.py`**: The main Slack bot application.
-    -   Listens for `@App mentions`.
-    -   Queries ChromaDB for relevant context.
-    -   Generates answers using Llama 3.2 via Ollama.
-    -   Cites sources (PDF filename + page, or Slack thread).
-
--   **`ingest_pdfs.py`**: Ingests PDF files.
-    -   Reads all PDFs from `data_pdfs/`.
-    -   Chunks text (500 chars, 50 overlap).
-    -   Generates embeddings and stores them in ChromaDB (`aerostream_docs`).
-
--   **`ingest_slack.py`**: Ingests Slack channel history.
-    -   Fetches history from the configured channel.
-    -   Merges thread replies into single documents.
-    -   Embeds and stores them in ChromaDB.
-    -   *Note: Requires `CHANNEL_ID` to be set or correctly resolved.*
-
--   **`seed_slack.py`**: (Utility) Helper script to seed a Slack channel with mock data for testing.
-
--   **`check_db.py`**: (Utility) Simple script to verify the count of documents in ChromaDB and check for Slack entries.
+-   **`src/bot.py`**: The main Slack bot application that listens for mentions and generates answers.
+-   **`src/rag_logic.py`**: Core RAG pipeline with optional TruLens instrumentation for evaluation.
+-   **`scripts/ingest/ingest_master.py`**: Master ingestion script supporting multiple strategies.
+-   **`scripts/evaluation/evaluate_trulens.py`**: TruLens-based evaluation runner.
+-   **`scripts/dashboard/start_dashboard.py`**: TruLens dashboard launcher for viewing results.
 
 ## Usage
 
@@ -68,16 +80,18 @@ See `.env.example` for a complete template with all available options.
 
 2.  **Ingest Data**:
     ```bash
-    # Ingest PDFs
-    python ingest_pdfs.py
+    # Place PDF files in data/pdfs/ directory
 
-    # Ingest Slack History
-    python ingest_slack.py
+    # Ingest with standard chunking strategy
+    python scripts/ingest/ingest_master.py --strategy standard
+
+    # Or use semantic chunking
+    python scripts/ingest/ingest_master.py --strategy semantic
     ```
 
 3.  **Run the Bot**:
     ```bash
-    python bot.py
+    python src/bot.py
     ```
 
 ## Evaluation with TruLens
@@ -88,15 +102,20 @@ This project uses **TruLens** for comprehensive RAG evaluation, tracking answer 
 
 1.  **Run a small test evaluation** (5 questions):
     ```bash
-    python3 evaluate_trulens.py --limit 5
+    ./scripts/run_evaluation.sh --test
     ```
 
 2.  **Run full evaluation** (50 questions):
     ```bash
-    python3 evaluate_trulens.py
+    ./scripts/run_evaluation.sh
     ```
 
-3.  **Customize evaluation settings**:
+3.  **View results in the dashboard**:
+    ```bash
+    ./scripts/dashboard/start_dashboard.sh
+    ```
+
+4.  **Customize evaluation settings**:
     ```bash
     # Use specific model and retrieval strategy
     python3 evaluate_trulens.py --model llama3.2 --retrieval semantic-rerank

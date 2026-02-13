@@ -15,8 +15,9 @@ from typing import Dict, List, Any, Tuple
 from collections import defaultdict
 
 # Database paths
-TRULENS_DB = "trulens_eval.db"
-OLD_DB = "evaluation_history.db"
+# Database paths
+TRULENS_DB = "data/databases/trulens_eval.db"
+OLD_DB = "data/databases/evaluation_history.db"
 
 
 def connect_to_db(db_path: str) -> sqlite3.Connection:
