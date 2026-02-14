@@ -1,0 +1,9 @@
+Total records in trulens_records: 0
+Sample app_ids in records: []
+Sample app_ids in apps:
+ - ID: app_hash_5c439f4f74ba7686a84b751f339a1110, Name: eval_semantic-rerank_llama_20260213_130354
+ - ID: app_hash_6c18491ca9f68c6f0615e60f282bb96d, Name: eval_semantic-rerank_llama_20260213_161125
+ - ID: app_hash_b2b902f09f60587f1ef2c53d33d32f52, Name: eval_semantic-rerank_llama_20260213_161430
+ - ID: app_hash_bdcd55378459f218f9b64f3a211d1425, Name: experiment_chunking_1000
+ - ID: app_hash_1c130ba66276185f09fdd3c56b149835, Name: eval_semantic-rerank_llama_20260213_180858
+Join count: 0

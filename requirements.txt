@@ -14,10 +14,6 @@ ollama
 python-dotenv
 sentence-transformers
 
-# TrueLens evaluation
-trulens-eval
-trulens-providers-langchain
-trulens-apps-langchain
 
 # Ingestion dependencies
 pdfplumber

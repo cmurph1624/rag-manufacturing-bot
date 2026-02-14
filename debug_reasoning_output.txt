@@ -1,0 +1,14 @@
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/munch/__init__.py:24: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+🦑 Initialized with db url sqlite:////Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db .
+🛑 Secret keys may be written to the database. See the `database_redact_keys` option of `TruSession` to prevent this.
+✅ experimental Feature.OTEL_TRACING enabled.
+🔒 experimental Feature.OTEL_TRACING is enabled and cannot be changed.
+Fetching records for app: experiment_chunking_1000
+
+--- Inspecting 'Answer Relevance_calls' ---
+
+Type of call data: <class 'list'>
+
+First element in list:
+Error: Object of type datetime is not JSON serializable

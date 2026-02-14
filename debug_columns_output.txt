@@ -1,0 +1,71 @@
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/munch/__init__.py:24: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Connecting to sqlite:////Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db
+🦑 Initialized with db url sqlite:////Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db .
+🛑 Secret keys may be written to the database. See the `database_redact_keys` option of `TruSession` to prevent this.
+✅ experimental Feature.OTEL_TRACING enabled.
+🔒 experimental Feature.OTEL_TRACING is enabled and cannot be changed.
+Session initialized.
+Fetching records for app: experiment_chunking_1000
+Records found: 27
+
+--- Columns ---
+app_id
+app_name
+app_version
+app_json
+type
+record_id
+input_id
+input
+output
+tags
+record_json
+cost_json
+perf_json
+ts
+latency
+total_tokens
+total_cost
+eval_cost
+eval_cost_snowflake
+cost_currency
+num_events
+Answer Relevance
+Answer Relevance_calls
+Answer Relevance feedback cost in USD
+Answer Relevance direction
+
+--- Feedback Columns list ---
+['Answer Relevance']
+
+--- First Record Head ---
+                                                                                       0
+app_id                                         app_hash_bdcd55378459f218f9b64f3a211d1425
+app_name                                                        experiment_chunking_1000
+app_version                                                                         base
+app_json                               {'app_name': 'experiment_chunking_1000', 'app_...
+type                                                                                SPAN
+record_id                                           7ad55988-ef3e-4c5d-b318-e01175465c8e
+input_id                                                                                
+input                                  What is the recommended torque setting for the...
+output                                 What is the recommended torque setting for the...
+tags                                                                                    
+record_json                            {'record_id': '7ad55988-ef3e-4c5d-b318-e011754...
+cost_json                                                   {'n_tokens': 0, 'cost': 0.0}
+perf_json                              {'start_time': 2026-02-13 16:27:37.928275, 'en...
+ts                                                            2026-02-13 16:27:37.928275
+latency                                                                         4.938511
+total_tokens                                                                           0
+total_cost                                                                           0.0
+eval_cost                                                                            0.0
+eval_cost_snowflake                                                                  0.0
+cost_currency                                                                        USD
+num_events                                                                           282
+Answer Relevance                                                                     1.0
+Answer Relevance_calls                 [{'span_type': 'eval', 'args': {'prompt': 'Wha...
+Answer Relevance feedback cost in USD                                                0.0
+Answer Relevance direction                                                          True
+
+--- Checking for 'Answer Relevance' ---
+Potential relevance columns: ['Answer Relevance', 'Answer Relevance_calls', 'Answer Relevance feedback cost in USD', 'Answer Relevance direction']

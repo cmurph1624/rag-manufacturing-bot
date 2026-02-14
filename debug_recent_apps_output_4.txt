@@ -1,0 +1,7 @@
+Testing Query with quoted key...
+Most recent 5 apps (events):
+ - eval_semantic-rerank_llama_20260213_200723 (Last active: 2026-02-13 20:12:29.222709)
+ - eval_semantic-rerank_llama_20260213_180858 (Last active: 2026-02-13 18:09:39.132433)
+ - experiment_chunking_1000 (Last active: 2026-02-13 16:32:49.529147)
+ - eval_semantic-rerank_llama_20260213_161430 (Last active: 2026-02-13 16:14:55.700988)
+ - eval_semantic-rerank_llama_20260213_161125 (Last active: 2026-02-13 16:12:20.628399)

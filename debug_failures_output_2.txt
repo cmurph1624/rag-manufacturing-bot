@@ -1,0 +1,63 @@
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/munch/__init__.py:24: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Connecting to sqlite:////Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db
+🦑 Initialized with db url sqlite:////Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db .
+🛑 Secret keys may be written to the database. See the `database_redact_keys` option of `TruSession` to prevent this.
+✅ experimental Feature.OTEL_TRACING enabled.
+🔒 experimental Feature.OTEL_TRACING is enabled and cannot be changed.
+Session initialized.
+Fetching records for app: experiment_chunking_1000
+Records found: 27
+Found 15 failed records (Score 0 or NaN).
+
+--- Inspecting Failures ---
+
+--- Failure Record 0 ---
+Record ID: d133e4d2-7b27-46ba-9a17-14fbcda4c79c
+Answer Relevance Score: 0.0
+Calls Type: <class 'list'>
+Number of calls: 26
+Last Call Keys: dict_keys(['span_type', 'eval_root_id', 'timestamp', 'args_span_id', 'args_span_attribute'])
+Meta: None
+Error field: None
+Status: None
+
+--- Failure Record 1 ---
+Record ID: 9dab205a-31da-4d7f-8599-a5215f5131ba
+Answer Relevance Score: 0.0
+Calls Type: <class 'list'>
+Number of calls: 30
+Last Call Keys: dict_keys(['span_type', 'eval_root_id', 'timestamp', 'args_span_id', 'args_span_attribute'])
+Meta: None
+Error field: None
+Status: None
+
+--- Failure Record 2 ---
+Record ID: 6a18d28f-c700-4dab-a903-2dc1408538a3
+Answer Relevance Score: 0.0
+Calls Type: <class 'list'>
+Number of calls: 36
+Last Call Keys: dict_keys(['span_type', 'eval_root_id', 'timestamp', 'args_span_id', 'args_span_attribute'])
+Meta: None
+Error field: None
+Status: None
+
+--- Failure Record 3 ---
+Record ID: 2aab25bc-a3be-4301-82c5-f4cd84014627
+Answer Relevance Score: 0.0
+Calls Type: <class 'list'>
+Number of calls: 46
+Last Call Keys: dict_keys(['span_type', 'eval_root_id', 'timestamp', 'args_span_id', 'args_span_attribute'])
+Meta: None
+Error field: None
+Status: None
+
+--- Failure Record 4 ---
+Record ID: f601771b-fff6-46e0-a650-8a01f98c1ce9
+Answer Relevance Score: 0.0
+Calls Type: <class 'list'>
+Number of calls: 24
+Last Call Keys: dict_keys(['span_type', 'eval_root_id', 'timestamp', 'args_span_id', 'args_span_attribute'])
+Meta: None
+Error field: None
+Status: None
