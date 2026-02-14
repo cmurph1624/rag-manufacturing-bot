@@ -285,6 +285,7 @@ def run_evaluation(
 
             bot_answer = response_data.get("answer", "")
             retrieved_chunks = response_data.get("retrieved_chunks", [])
+            trulens_record_id = response_data.get("trulens_record_id")
 
             # Check citation
             citation_match = check_citation_match(bot_answer, expected_location)
@@ -306,7 +307,8 @@ def run_evaluation(
                 "retrieved_chunks_count": len(retrieved_chunks),
                 "model": model_name,
                 "retrieval_strategy": retrieval_strategy,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "trulens_record_id": trulens_record_id
             })
 
         except Exception as e:
@@ -357,6 +359,34 @@ def run_evaluation(
     citation_rate = (citation_matches / total_questions * 100) if total_questions > 0 else 0
     success_rate = (successful_questions / total_questions * 100) if total_questions > 0 else 0
 
+    # Wait for feedback functions to complete
+    print(f"\n[{datetime.now().isoformat()}] INFO: Waiting 15s for feedback functions to compute scores...")
+    time.sleep(15)
+
+    # Fetch feedback scores
+    avg_groundedness = 0.0
+    avg_context_relevance = 0.0
+    feedback_results = {}
+
+    try:
+        print(f"[{datetime.now().isoformat()}] INFO: Fetching feedback scores from TrueLens...")
+        session = TruSession(database_url=f"sqlite:///{database_path}")
+        
+        # Get leaderboard for averages
+        leaderboard = session.get_leaderboard(app_ids=[app_id])
+        if not leaderboard.empty:
+            if "Groundedness" in leaderboard.columns:
+                avg_groundedness = leaderboard["Groundedness"].mean()
+            if "Context Relevance" in leaderboard.columns:
+                avg_context_relevance = leaderboard["Context Relevance"].mean()
+            
+            print(f"[{datetime.now().isoformat()}] INFO: Feedback scores fetched successfully")
+        else:
+            print(f"[{datetime.now().isoformat()}] WARNING: No leaderboard data found for app {app_id}")
+            
+    except Exception as e:
+        print(f"[{datetime.now().isoformat()}] ERROR: Failed to fetch feedback scores: {e}")
+
     # Compile summary
     summary = {
         "app_id": app_id,
@@ -370,6 +400,8 @@ def run_evaluation(
         "avg_latency_seconds": avg_latency,
         "citation_matches": citation_matches,
         "citation_match_rate": citation_rate,
+        "avg_groundedness": avg_groundedness,
+        "avg_context_relevance": avg_context_relevance,
         "category_breakdown": dict(category_stats),
         "errors": errors,
         "database_path": database_path
@@ -403,6 +435,8 @@ def print_summary(summary: Dict[str, Any]) -> None:
     print(f"Failed: {summary['failed_questions']}")
     print(f"Average Latency: {summary['avg_latency_seconds']:.2f}s")
     print(f"Citation Match Rate: {summary['citation_matches']}/{summary['total_questions']} ({summary['citation_match_rate']:.1f}%)")
+    print(f"Groundedness: {summary.get('avg_groundedness', 0.0):.2f}")
+    print(f"Context Relevance: {summary.get('avg_context_relevance', 0.0):.2f}")
 
     print(f"\n{'─'*60}")
     print(f"📂 BREAKDOWN BY CATEGORY")
@@ -569,9 +603,6 @@ def main():
 
         # Save results to JSON
         save_results_to_json(evaluation_data)
-
-        print(f"\n[{datetime.now().isoformat()}] INFO: Waiting 15s for background feedback functions to finish...")
-        time.sleep(15)
 
         print(f"[{datetime.now().isoformat()}] INFO: Evaluation completed successfully!")
 

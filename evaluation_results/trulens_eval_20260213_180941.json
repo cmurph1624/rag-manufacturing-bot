@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "app_id": "eval_semantic-rerank_llama_20260213_180858",
+    "model": "llama",
+    "retrieval_strategy": "semantic-rerank",
+    "timestamp": "2026-02-13T18:09:41.776311",
+    "total_questions": 3,
+    "successful_questions": 3,
+    "failed_questions": 0,
+    "success_rate": 100.0,
+    "avg_latency_seconds": 9.363431056340536,
+    "citation_matches": 3,
+    "citation_match_rate": 100.0,
+    "avg_groundedness": 0.0,
+    "avg_context_relevance": 0.0,
+    "category_breakdown": {
+      "Work_Instructions": {
+        "total": 3,
+        "errors": 0
+      }
+    },
+    "errors": [],
+    "database_path": "/Users/chrismurphy/Documents/Dev/rag-manufacturing-bot/data/databases/trulens_eval.db"
+  },
+  "results": [
+    {
+      "question_id": 0,
+      "question": "What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?",
+      "gold_answer": "The screws should be torqued to 2.5 Nm. Over-torquing may crack the carbon fiber, while under-torquing can cause vibrations.",
+      "bot_answer": "The recommended torque setting for the rotor arm screws on the Falcon X1 is 2.5 Nm.\n\n*References:*\n\u2022 Slack API (Page Unknown)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 10.669450044631958,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T18:09:09.153336",
+      "trulens_record_id": "ca29c44d-750f-4c82-aaa8-96a730bfccb0"
+    },
+    {
+      "question_id": 1,
+      "question": "Which Loctite type should be used for the rotor arm assembly?",
+      "gold_answer": "Loctite 243 (Blue) should be applied to the threads.",
+      "bot_answer": "I don't know.\n\n*References:*\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)\n\u2022 Slack API (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 8.514615058898926,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T18:09:17.688696",
+      "trulens_record_id": "49494417-ecca-46dd-97ff-5b98961e1060"
+    },
+    {
+      "question_id": 2,
+      "question": "What is the correct tightening pattern for the rotor arm screws?",
+      "gold_answer": "Tighten the screws in a cross pattern (Top-Left, Bottom-Right, Top-Right, Bottom-Left) to ensure even seating.",
+      "bot_answer": "According to the provided context, the correct tightening pattern for the rotor arm screws on the Falcon X1 is:\n\n\u25cf Step 3: Tighten screws in a cross pattern (Top-Left, Bottom-Right, Top-Right, Bottom-Left) to ensure even seating.\n\n*References:*\n\u2022 Slack API (Page Unknown)\n\u2022 SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)",
+      "expected_location": "SOP-01_Rotor_Arm_Assembly_Falcon_X1",
+      "category": "Work_Instructions",
+      "latency_seconds": 8.906228065490723,
+      "citation_match": true,
+      "retrieved_chunks_count": 5,
+      "model": "llama",
+      "retrieval_strategy": "semantic-rerank",
+      "timestamp": "2026-02-13T18:09:26.612345",
+      "trulens_record_id": "72fe7681-fba9-4b00-8295-478c2b001099"
+    }
+  ]
+}

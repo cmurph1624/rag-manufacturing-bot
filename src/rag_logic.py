@@ -191,7 +191,8 @@ def generate_answer(
                  "answer": "I am unable to help with this request as it has been deemed unsafe",
                  "retrieved_chunks": [],
                  "model": "llama-guard3:1b",
-                 "retrieval_type": "blocked"
+                 "retrieval_type": "blocked",
+                 "trulens_record_id": None
              }
 
 
@@ -221,11 +222,14 @@ def generate_answer(
             print(f"Invoking instrumented chain for query: '{user_query}'...")
             with tru_chain as recording:
                 response = tru_chain.app.invoke({"input": user_query})
-
-            # Note: Recording object doesn't have record_id attribute directly
-            print(f"✅ TrueLens recording completed")
+            
+            # Get the record ID for feedback retrieval
+            record = recording.get()
+            trulens_record_id = record.record_id if record else None
+            print(f"✅ TrueLens recording completed (Record ID: {trulens_record_id})")
         else:
             # Normal execution without TrueLens
+            trulens_record_id = None
             # 1. Get Components
             llm = LLMFactory.get_llm(GENERATION_MODEL)
             retriever = RetrievalFactory.get_strategy(retrieval_strategy_type)
@@ -268,8 +272,8 @@ def generate_answer(
              return {
                  "answer": "I couldn't find any relevant documents in the database.",
                  "retrieved_chunks": [],
-                 "model": GENERATION_MODEL,
-                 "retrieval_type": retrieval_strategy_type
+                 "retrieval_type": retrieval_strategy_type,
+                 "trulens_record_id": None
             }
 
         citations = []
@@ -291,7 +295,8 @@ def generate_answer(
             "answer": final_answer,
             "retrieved_chunks": doc_texts,
             "model": GENERATION_MODEL,
-            "retrieval_type": retrieval_strategy_type # passing string name back
+            "retrieval_type": retrieval_strategy_type,
+            "trulens_record_id": trulens_record_id
         }
 
     except Exception as e:
@@ -303,5 +308,7 @@ def generate_answer(
             "retrieved_chunks": [],
             "model": GENERATION_MODEL,
             "retrieval_type": retrieval_strategy_type,
-            "error": str(e)
+            "retrieval_type": retrieval_strategy_type,
+            "error": str(e),
+            "trulens_record_id": None
         }
