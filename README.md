@@ -88,6 +88,13 @@ See `.env.example` for a complete template with all available options.
     python src/bot.py
     ```
 
+3.  **Run Evaluations (RAGAS)**:
+    Ensure `ANTHROPIC_API_KEY` is set in your `.env`.
+    ```bash
+    python scripts/evaluate_ragas.py
+    ```
+    Results will be saved to `evaluation_results/ragas_results.csv`.
+
 
 
 ## Project Structure

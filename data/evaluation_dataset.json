@@ -1,0 +1,22 @@
+[
+    {
+        "question": "What is the recommended maintenance schedule for the hydraulic press?",
+        "ground_truth": "The recommended maintenance schedule for the hydraulic press includes daily checks for oil leaks and pressure levels, weekly inspection of hoses and fittings, and a monthly comprehensive system check including filter replacement every 500 hours of operation."
+    },
+    {
+        "question": "How do I reset the error code E-404 on the assembly robot?",
+        "ground_truth": "To reset error code E-404 on the assembly robot, first ensure the emergency stop is released. Then, navigate to the main menu on the control panel, select 'Diagnostics', choose 'Reset Errors', and enter the supervisor PIN code. Restart the system to complete the reset."
+    },
+    {
+        "question": "What are the safety protocols for handling chemical spills?",
+        "ground_truth": "Safety protocols for handling chemical spills involve immediately evacuating the area, alerting the safety officer, wearing appropriate PPE (gloves, goggles, respirator), using the spill kit to contain the spill, and disposing of contaminated materials in designated hazardous waste bins."
+    },
+    {
+        "question": "Can I use generic lubricant for the conveyor belt system?",
+        "ground_truth": "No, you should not use generic lubricant. The conveyor belt system requires the specific high-temperature synthetic lubricant specified in the manual to prevent belt slippage and degradation."
+    },
+    {
+        "question": "What is the maximum load capacity of the overhead crane?",
+        "ground_truth": "The maximum load capacity of the overhead crane is 5 tons (10,000 lbs). Exceeding this limit triggers the overload protection system."
+    }
+]
