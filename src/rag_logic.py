@@ -13,6 +13,7 @@ from langchain_core.documents import Document
 # Custom Imports
 from src.retrieval import RetrievalFactory
 from src.llm import LLMFactory
+from src.prompts.answer_prompt import SYSTEM_INSTRUCTION
 
 # Load environment variables
 load_dotenv()
@@ -83,13 +84,9 @@ def generate_answer(
         retriever = RetrievalFactory.get_strategy(retrieval_strategy_type)
 
         # 2. Define Prompt
-        system_prompt = (
-            "You are a helpful manufacturing support assistant. "
-            "Answer the question using ONLY the following context. "
-            "If you don't know, say you don't know."
-            "\n\n"
-            "{context}"
-        )
+        # 2. Define Prompt
+        # We append {context} because create_stuff_documents_chain requires it in the prompt
+        system_prompt = SYSTEM_INSTRUCTION + "\n\n{context}"
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),

@@ -32,78 +32,68 @@ python3 scripts/ingest/ingest_master.py --reset --strategy semantic --semantic_t
 
 ---
 
-## Evaluation
+## Evaluation (Ragas)
 
-### Quick Test Evaluation (5 questions)
+We use Ragas for evaluation (Faithfulness, Answer Relevancy, Context Precision/Recall).
+
+### 1. Quick Test
+Runs evaluation on a small subset (5 questions) to verify the pipeline.
+
 ```bash
 ./scripts/run_evaluation.sh --test
 ```
 
-### Full Evaluation (50 questions)
+### 2. Full Evaluation
+Runs evaluation on the entire dataset.
+
 ```bash
 ./scripts/run_evaluation.sh
 ```
 
-### Custom Evaluation
+### 3. Custom Evaluation
+Use the helper script `run_evaluation.sh` with flags or call the Python script directly.
+
 ```bash
-# Specify number of questions
-python3 scripts/evaluation/evaluate_trulens.py --limit 20
+# Limit to 10 questions
+./scripts/run_evaluation.sh --limit 10
 
-# Specify model and retrieval strategy
-python3 scripts/evaluation/evaluate_trulens.py \
-  --model llama3.2 \
-  --retrieval semantic-rerank \
-  --limit 10
+# Filter by Category
+./scripts/run_evaluation.sh --category "Adversarial"
 
-# Custom app ID for tracking
-python3 scripts/evaluation/evaluate_trulens.py --app-id "test_run_v1"
+# Filter by Test ID
+./scripts/run_evaluation.sh --id 1
+
+# Specify Run Name (for tracking in Dashboard/CSVs)
+./scripts/run_evaluation.sh --name "experiment_v1"
 ```
 
-### Change LLM Model
-You can specify the LLM model using the `LLM_MODEL_NAME` environment variable or via command line.
+### 4. Change Model or Retrieval Strategy
+You can override the generation model and retrieval strategy using flags.
 
 ```bash
-# Via environment variable
-LLM_MODEL_NAME=mistral python3 scripts/evaluation/evaluate_trulens.py --limit 10
+# Use Mistral model
+./scripts/run_evaluation.sh --model mistral --limit 10
 
-# Via command line flag
-python3 scripts/evaluation/evaluate_trulens.py --model mistral --limit 10
+# Use Semantic Reranking retrieval
+./scripts/run_evaluation.sh --retrieval semantic-rerank --limit 10
 ```
 
 ---
 
 ## Dashboard
 
-### Launch TruLens Dashboard
+Launch the Ragas Dashboard (Streamlit) to visualize results.
+
 ```bash
 ./scripts/dashboard/start_dashboard.sh
 ```
 
 Or directly:
 ```bash
-python3 scripts/dashboard/start_dashboard.py
+python3 scripts/dashboard/app.py
 ```
 
-The dashboard will be available at `http://localhost:8501`
-
----
-
-## Analysis Scripts
-
-### Analyze Performance
-```bash
-python3 scripts/evaluation/analyze_performance.py
-```
-
-### Analyze TruLens Results
-```bash
-python3 scripts/evaluation/analyze_trulens_results.py
-```
-
-### Compare Systems
-```bash
-python3 scripts/evaluation/compare_systems.py
-```
+The dashboard will be available at `http://localhost:8501`.
 
 ---
 
@@ -144,11 +134,6 @@ python3 src/bot.py
 python3 tests/test_langchain_rag.py
 ```
 
-### Test TruLens Instrumentation
-```bash
-python3 tests/test_trulens_instrumentation.py
-```
-
 ---
 
 ## Common Workflows
@@ -171,15 +156,15 @@ python3 scripts/ingest/ingest_master.py --reset --strategy semantic
 ### Compare Retrieval Strategies
 ```bash
 # Test semantic retrieval
-python3 scripts/evaluation/evaluate_trulens.py \
+./scripts/run_evaluation.sh \
   --retrieval semantic \
-  --app-id "test_semantic" \
+  --name "semantic_baseline" \
   --limit 20
 
 # Test semantic with reranking
-python3 scripts/evaluation/evaluate_trulens.py \
+./scripts/run_evaluation.sh \
   --retrieval semantic-rerank \
-  --app-id "test_rerank" \
+  --name "rerank_experiment" \
   --limit 20
 
 # Compare in dashboard

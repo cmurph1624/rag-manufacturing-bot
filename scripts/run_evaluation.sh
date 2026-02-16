@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # =============================================================================
-# TruLens RAG Evaluation Runner
+# RAGAS Evaluation Runner (formerly TrueLens)
 # =============================================================================
-# This script provides a convenient wrapper around evaluate_trulens.py
+# This script provides a convenient wrapper around evaluate_ragas.py
 # with common usage patterns and helpful defaults.
 #
 # Usage:
 #   ./run_evaluation.sh [options]
 #
 # Examples:
-#   ./run_evaluation.sh                    # Full evaluation (50 questions)
+#   ./run_evaluation.sh                    # Full evaluation (all questions in test set)
 #   ./run_evaluation.sh --test             # Quick test (5 questions)
-#   ./run_evaluation.sh --model llama3.2   # Specify model
+#   ./run_evaluation.sh --model llama3.2   # Specify generation model
 #   ./run_evaluation.sh --help             # Show help
 # =============================================================================
 
@@ -29,9 +29,9 @@ NC='\033[0m' # No Color
 LIMIT=""
 MODEL=""
 RETRIEVAL=""
-APP_ID=""
-SKIP_FEEDBACK=""
-EXTRA_ARGS=""
+RUN_NAME=""
+CATEGORY=""
+TEST_ID=""
 
 # Helper functions
 print_header() {
@@ -58,37 +58,33 @@ print_info() {
 
 show_help() {
     cat << EOF
-TruLens RAG Evaluation Runner
+RAGAS Evaluation Runner
 
 Usage: $0 [options]
 
 Options:
     -t, --test              Quick test with 5 questions
     -l, --limit N           Evaluate N questions
-    -m, --model MODEL       Use specific model (e.g., llama3.2, mistral)
-    -r, --retrieval STRAT   Use retrieval strategy (semantic, lexical, semantic-rerank)
-    -a, --app-id ID         Custom app identifier
-    -s, --skip-feedback     Skip feedback function evaluation (faster)
+    -m, --model MODEL       Use specific generation model (e.g., llama3.2, mistral)
+    -r, --retrieval STRAT   Use retrieval strategy (semantic, standard, semantic-rerank)
+    -n, --name NAME         Name/Tag for this run (default: 'run')
+    -c, --category CAT      Filter by category (e.g., 'Adversarial')
+    -i, --id ID             Filter by specific Test ID
     -h, --help              Show this help message
 
 Presets:
-    --quick                 5 questions, skip feedback (fastest)
-    --standard              20 questions, all feedback
-    --full                  50 questions, all feedback (default)
-    --comprehensive         100 questions, all feedback
+    --quick                 5 questions
+    --full                  All questions (default)
 
 Examples:
-    $0                              # Full evaluation (50 questions)
+    $0                              # Full evaluation
     $0 --test                       # Quick test (5 questions)
-    $0 --quick                      # 5 questions, no feedback
     $0 --limit 10 --model mistral   # 10 questions with Mistral
-    $0 --comprehensive              # Full comprehensive evaluation
+    $0 --category Adversarial       # Run only adversarial questions
 
 Environment:
     Reads configuration from .env file
-    Ensure SLACK tokens and model settings are configured
-
-For more information, see TRULENS_QUICKSTART.md
+    Ensure ANTHROPIC_API_KEY is set for the Judge
 EOF
 }
 
@@ -99,7 +95,7 @@ while [[ $# -gt 0 ]]; do
             show_help
             exit 0
             ;;
-        -t|--test)
+        -t|--test|--quick)
             LIMIT="5"
             shift
             ;;
@@ -115,29 +111,20 @@ while [[ $# -gt 0 ]]; do
             RETRIEVAL="$2"
             shift 2
             ;;
-        -a|--app-id)
-            APP_ID="$2"
+        -n|--name|--app-id) # Support app-id legacy flag
+            RUN_NAME="$2"
             shift 2
             ;;
-        -s|--skip-feedback)
-            SKIP_FEEDBACK="--skip-feedback"
-            shift
+        -c|--category)
+            CATEGORY="$2"
+            shift 2
             ;;
-        --quick)
-            LIMIT="5"
-            SKIP_FEEDBACK="--skip-feedback"
-            shift
-            ;;
-        --standard)
-            LIMIT="20"
-            shift
+        -i|--id)
+            TEST_ID="$2"
+            shift 2
             ;;
         --full)
-            LIMIT="50"
-            shift
-            ;;
-        --comprehensive)
-            LIMIT="100"
+            LIMIT=""
             shift
             ;;
         *)
@@ -149,7 +136,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Pre-flight checks
-print_header "TruLens Evaluation Pre-flight Checks"
+print_header "RAGAS Evaluation Pre-flight Checks"
 
 # Check if Python is available
 if ! command -v python3 &> /dev/null; then
@@ -158,54 +145,48 @@ if ! command -v python3 &> /dev/null; then
 fi
 print_success "Python 3 found"
 
-# Check if evaluate_trulens.py exists
-if [ ! -f "scripts/evaluation/evaluate_trulens.py" ]; then
-    print_error "scripts/evaluation/evaluate_trulens.py not found"
+# Check if evaluate_ragas.py exists
+if [ ! -f "scripts/evaluate_ragas.py" ]; then
+    print_error "scripts/evaluate_ragas.py not found"
     exit 1
 fi
-print_success "evaluate_trulens.py found"
+print_success "evaluate_ragas.py found"
 
 # Check if .env exists
 if [ ! -f ".env" ]; then
     print_warning ".env file not found (will use defaults)"
-    print_info "Copy .env.example to .env and configure if needed"
 else
     print_success ".env file found"
 fi
 
-# Check if Ollama is running (if using local models)
-if ! curl -s http://localhost:11434/api/tags &> /dev/null; then
-    print_warning "Ollama does not appear to be running on localhost:11434"
-    print_info "If using Ollama models, start it with: ollama serve"
-    echo -n "Continue anyway? [y/N] "
-    read -r response
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        print_error "Evaluation cancelled"
-        exit 1
-    fi
+# Export Environment Variables for Model/Retrieval override
+if [ -n "$MODEL" ]; then
+    export LLM_MODEL_NAME="$MODEL"
+    print_info "Overriding Model: $MODEL"
+fi
+
+if [ -n "$RETRIEVAL" ]; then
+    export RETRIEVAL_STRATEGY="$RETRIEVAL"
+    print_info "Overriding Retrieval Strategy: $RETRIEVAL"
 fi
 
 # Build command
-CMD="python3 scripts/evaluation/evaluate_trulens.py"
+CMD="python3 scripts/evaluate_ragas.py"
 
 if [ -n "$LIMIT" ]; then
     CMD="$CMD --limit $LIMIT"
 fi
 
-if [ -n "$MODEL" ]; then
-    CMD="$CMD --model $MODEL"
+if [ -n "$RUN_NAME" ]; then
+    CMD="$CMD --name $RUN_NAME"
 fi
 
-if [ -n "$RETRIEVAL" ]; then
-    CMD="$CMD --retrieval $RETRIEVAL"
+if [ -n "$CATEGORY" ]; then
+    CMD="$CMD --category $CATEGORY"
 fi
 
-if [ -n "$APP_ID" ]; then
-    CMD="$CMD --app-id $APP_ID"
-fi
-
-if [ -n "$SKIP_FEEDBACK" ]; then
-    CMD="$CMD $SKIP_FEEDBACK"
+if [ -n "$TEST_ID" ]; then
+    CMD="$CMD --id $TEST_ID"
 fi
 
 # Show configuration
@@ -213,23 +194,10 @@ print_header "Evaluation Configuration"
 echo "Command: $CMD"
 echo ""
 echo "Settings:"
-[ -n "$LIMIT" ] && echo "  - Questions: $LIMIT" || echo "  - Questions: 50 (default)"
-[ -n "$MODEL" ] && echo "  - Model: $MODEL" || echo "  - Model: from .env or llama3.2"
-[ -n "$RETRIEVAL" ] && echo "  - Retrieval: $RETRIEVAL" || echo "  - Retrieval: from .env or semantic"
-[ -n "$APP_ID" ] && echo "  - App ID: $APP_ID" || echo "  - App ID: auto-generated"
-[ -n "$SKIP_FEEDBACK" ] && echo "  - Feedback: DISABLED (faster)" || echo "  - Feedback: enabled"
+[ -n "$LIMIT" ] && echo "  - Questions: $LIMIT" || echo "  - Questions: All"
+[ -n "$MODEL" ] && echo "  - Gen Model: $MODEL" || echo "  - Gen Model: from .env ($LLM_MODEL_NAME)"
+[ -n "$RETRIEVAL" ] && echo "  - Retrieval: $RETRIEVAL" || echo "  - Retrieval: from .env ($RETRIEVAL_STRATEGY)"
 echo ""
-
-# Confirm if comprehensive
-if [ "$LIMIT" = "100" ]; then
-    print_warning "Comprehensive evaluation may take 15-30 minutes"
-    echo -n "Continue? [y/N] "
-    read -r response
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        print_error "Evaluation cancelled"
-        exit 1
-    fi
-fi
 
 # Run evaluation
 print_header "Running Evaluation"
@@ -238,20 +206,17 @@ echo ""
 if $CMD; then
     echo ""
     print_header "Evaluation Complete"
-    print_success "Results saved to data/databases/trulens_eval.db"
-    print_info "View results: ./scripts/dashboard/start_dashboard.sh"
-
+    print_success "Ragas evaluation finished successfully."
+    
     # Show latest results file
-    LATEST_RESULT=$(ls -t evaluation_results/trulens_eval_*.json 2>/dev/null | head -1)
+    LATEST_RESULT=$(ls -t evaluation_results/ragas_results_*.csv 2>/dev/null | head -1)
     if [ -n "$LATEST_RESULT" ]; then
-        print_info "JSON export: $LATEST_RESULT"
+        print_info "Results saved to: $LATEST_RESULT"
     fi
 
     echo ""
     print_info "Next steps:"
     echo "  1. Launch dashboard: ./scripts/dashboard/start_dashboard.sh"
-    echo "  2. Analyze results: python scripts/evaluation/analyze_trulens_results.py"
-    echo "  3. Compare runs: use the dashboard leaderboard"
     echo ""
 
     exit 0

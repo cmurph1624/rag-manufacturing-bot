@@ -31,7 +31,7 @@ OUTPUT_CSV_PATH = os.path.join("evaluation_results", "ragas_results.csv")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307") 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2" # Local embeddings
 
-def load_dataset(custom_path: str = None, category_filter: str = None) -> List[Dict]:
+def load_dataset(custom_path: str = None, category_filter: str = None, id_filter: int = None) -> List[Dict]:
     """Loads the evaluation dataset, preferring tests/test_set.json or custom path."""
     if custom_path:
         path = custom_path
@@ -53,17 +53,26 @@ def load_dataset(custom_path: str = None, category_filter: str = None) -> List[D
     if isinstance(data, dict) and "qa_pairs" in data:
         all_items = data["qa_pairs"]
         
-        # --- Category Filtering ---
+        # --- Category/ID Filtering ---
         if category_filter:
             print(f"Filtering dataset for category: '{category_filter}'")
             filtered_items = [item for item in all_items if item.get("category") == category_filter]
+        elif id_filter:
+            print(f"Filtering dataset for ID: {id_filter}")
+            filtered_items = [item for item in all_items if item.get("id") == id_filter]
+        else:
+            filtered_items = all_items
+
+        if category_filter or id_filter:
             
-            # Print available categories for debugging/user info
-            available_categories = sorted(list(set(item.get("category", "Unknown") for item in all_items)))
-            print(f"Available categories: {available_categories}")
+            # Print available categories/IDs for debugging/user info
+            if category_filter:
+                available_categories = sorted(list(set(item.get("category", "Unknown") for item in all_items)))
+                print(f"Available categories: {available_categories}")
             
             if not filtered_items:
-                print(f"WARNING: No items found for category '{category_filter}'.")
+                filter_desc = f"category '{category_filter}'" if category_filter else f"ID {id_filter}"
+                print(f"WARNING: No items found for {filter_desc}.")
                 return []
             
             # Format and return filtered items
@@ -72,7 +81,8 @@ def load_dataset(custom_path: str = None, category_filter: str = None) -> List[D
                 formatted.append({
                     "question": item["question"],
                     "ground_truth": item["answer"],
-                    "category": item.get("category") # Keep category metadata if needed later
+                    "category": item.get("category"), # Keep category metadata if needed later
+                    "id": item.get("id")
                 })
             return formatted
         # ---------------------------
@@ -82,7 +92,8 @@ def load_dataset(custom_path: str = None, category_filter: str = None) -> List[D
             formatted.append({
                 "question": item["question"],
                 "ground_truth": item["answer"],
-                "category": item.get("category")
+                "category": item.get("category"),
+                "id": item.get("id")
             })
         return formatted
         
@@ -103,6 +114,7 @@ def run_inference(dataset: List[Dict]) -> Dict[str, List]:
     answers = []
     contexts = []
     ground_truths = []
+    ids = []
 
     print(f"Starting inference on {len(dataset)} items...")
 
@@ -119,15 +131,17 @@ def run_inference(dataset: List[Dict]) -> Dict[str, List]:
         answers.append(response["answer"])
         contexts.append(response["retrieved_chunks"])
         ground_truths.append(gt)
+        ids.append(item.get("id"))
 
     return {
+        "id": ids,
         "question": questions,
         "answer": answers,
         "contexts": contexts,
         "ground_truth": ground_truths
     }
 
-def main(limit: int = None, dataset_path: str = None, category: str = None):
+def main(limit: int = None, dataset_path: str = None, category: str = None, test_id: int = None):
     # 1. Check for API Key
     if not os.getenv("ANTHROPIC_API_KEY"):
         print("ERROR: ANTHROPIC_API_KEY not found in environment variables.")
@@ -136,7 +150,7 @@ def main(limit: int = None, dataset_path: str = None, category: str = None):
 
     # 2. Load Data & Run Inference
     try:
-        raw_data = load_dataset(dataset_path, category)
+        raw_data = load_dataset(dataset_path, category, test_id)
         
         if not raw_data:
             print("No data to evaluate. Exiting.")
@@ -187,6 +201,10 @@ def main(limit: int = None, dataset_path: str = None, category: str = None):
         os.makedirs(os.path.dirname(OUTPUT_CSV_PATH), exist_ok=True)
         
         df = results.to_pandas()
+        
+        # Manually add 'id' column if present in the dataset (Ragas might strip unknown columns)
+        if "id" in hf_dataset.features:
+            df["id"] = hf_dataset["id"]
 
         # --- FIX: Post-process "Unsafe" Refusals ---
         # If the answer is the standard refusal message, we give it full marks.
@@ -221,11 +239,20 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=None, help="Limit the number of evaluations (default: All)")
     parser.add_argument("--dataset", type=str, default=None, help="Path to specific evaluation dataset (optional)")
     parser.add_argument("--category", type=str, default=None, help="Filter evaluation by category (e.g., 'Adversarial')")
+    parser.add_argument("--id", type=int, default=None, help="Filter evaluation by specific test ID (e.g., 1)")
     args = parser.parse_args()
 
     # Generate timestamped filename
+    # Generate timestamped filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    name_tag = f"{args.name}_{args.category}" if args.category else args.name
+    
+    if args.id:
+        name_tag = f"{args.name}_id_{args.id}"
+    elif args.category:
+        name_tag = f"{args.name}_{args.category}"
+    else:
+        name_tag = args.name
+
     filename = f"ragas_results_{name_tag}_{timestamp}.csv"
     
     # Update global output path (hacky but works for this script structure)
@@ -241,4 +268,5 @@ if __name__ == "__main__":
     print(f"Output will be saved to: {OUTPUT_CSV_PATH}")
 
     # Pass args to main
-    main(limit=args.limit, dataset_path=args.dataset, category=args.category)
+    # Pass args to main
+    main(limit=args.limit, dataset_path=args.dataset, category=args.category, test_id=args.id)

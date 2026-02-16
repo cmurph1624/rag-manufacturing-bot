@@ -91,6 +91,7 @@ else:
         df,
         use_container_width=True,
         column_config={
+            "id": st.column_config.NumberColumn("ID", format="%d"),
             "user_input": "Question",
             "response": "Generated Answer",
             "reference": "Ground Truth",
@@ -107,7 +108,15 @@ else:
     st.subheader("🔍 Inspect Individual Items")
     
     for _, row in df.iterrows():
-        with st.expander(f"Question: {row['user_input']}"):
+        # Handle case where 'id' might be missing in old results
+        doc_id = row.get('id', 'N/A')
+        # If ID is float (due to NaNs in mixed data), convert to int/str
+        try:
+             doc_id = int(doc_id)
+        except:
+             pass
+             
+        with st.expander(f"ID: {doc_id} | Question: {row['user_input']}"):
             c1, c2 = st.columns(2)
             with c1:
                 st.markdown("**Generated Answer:**")
