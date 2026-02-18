@@ -14,13 +14,14 @@ from langchain_core.documents import Document
 from src.retrieval import RetrievalFactory
 from src.llm import LLMFactory
 from src.prompts.answer_prompt import SYSTEM_INSTRUCTION
+from src.config import RETRIEVAL_STRATEGY, LLM_MODEL_NAME
 
 # Load environment variables
 load_dotenv()
 
 # Configuration
-GENERATION_MODEL = os.getenv("LLM_MODEL_NAME", "llama")
-DEFAULT_RETRIEVAL_STRATEGY = os.getenv("RETRIEVAL_STRATEGY", "semantic")
+GENERATION_MODEL = LLM_MODEL_NAME
+DEFAULT_RETRIEVAL_STRATEGY = RETRIEVAL_STRATEGY
 
 
 def generate_answer(

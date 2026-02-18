@@ -26,3 +26,7 @@ streamlit
 pdfplumber
 slack_sdk
 certifi
+rank-bm25
+slack_bolt
+PyYAML
+

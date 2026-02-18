@@ -60,48 +60,119 @@ class SemanticIngestionStrategy(IngestionStrategy):
         return "semantic"
 
     def split_sentences(self, text):
-        # Basic sentence splitting (improved regex)
-        sentences = re.split(r'(?<=[.?!])\s+', text)
+        """
+        Splits text into semantic units (sentences or structural blocks).
+        Uses improved regex to avoid splitting on:
+        - Numbered lists (1., 2.)
+        - Part numbers/Measurements (2.5, #RA-400)
+        - Common abbreviations
+        """
+        # Regex explanation:
+        # (?<!\d\.) : Negative lookbehind - not preceded by a digit AND dot (protects 1., 2.5.)
+        # (?<=[.?!]): Positive lookbehind - must be preceded by sentence terminator
+        # \s+      : One or more whitespaces
+        # This preserves "1. Item" but splits "Sentence. Next"
+        sentences = re.split(r'(?<!\d\.)(?<=[.?!])\s+', text)
         return [s.strip() for s in sentences if s.strip()]
 
-    def combine_sentences(self, sentences, embeddings, threshold, buffer_size=1):
+    def _classify_chunk(self, text):
+        """Helper to identify the structural type of a text chunk."""
+        text = text.strip()
+        if not text: return "empty"
+        
+        # Header detection:
+        # 1. Ends with colon (e.g., "Required Tools:")
+        # 2. Short and all caps (e.g., "INTRODUCTION")
+        # 3. Starts with "Step" followed by number (e.g., "Step 1")
+        if text.endswith(":") or (text.isupper() and len(text) < 60) or re.match(r'^Step\s+\d+', text, re.IGNORECASE):
+            return "header"
+            
+        # List Item detection:
+        # 1. Numbered lists: "1.", "1)", "1-"
+        # 2. Bullets: "●", "-", "*", "•"
+        if re.match(r'^(\d+[\.\)\-]|\.|[•\-\*])\s', text):
+            return "list_item"
+            
+        # Table detection (heuristic):
+        # Contains pipe separators or looks tabular
+        if "|" in text and len(text.split("|")) > 2:
+            return "table_row"
+            
+        return "text"
+
+    def combine_sentences(self, sentences, embeddings, threshold, min_chunk_size=100):
         """
-        Combines sentences into chunks based on semantic similarity.
+        Combines sentences into chunks based on structure and semantic similarity.
+        Respects:
+        - Minimum chunk size
+        - Section boundaries (Headers, Lists)
         """
         if not sentences:
             return []
 
         chunks = []
-        current_chunk = []
+        current_chunk = [sentences[0]]
+        current_chunk_size = len(sentences[0])
         
         # Calculate cosine distances between adjacent sentences
         distances = []
-        for i in range(len(embeddings) - 1):
-             # Cosine similarity is 1.0 for identical, -1.0 for opposite.
-             # Distance = 1 - Similarity.
-             sim = cosine_similarity([embeddings[i]], [embeddings[i+1]])[0][0]
-             dist = 1 - sim
-             distances.append(dist)
+        if len(embeddings) > 1:
+            # Batch calculate similarities for efficiency if possible, 
+            # here we loop as in original code but could be optimized.
+            # Convert to numpy for faster ops if needed, but list grouping is fine for now.
+            for i in range(len(embeddings) - 1):
+                sim = cosine_similarity([embeddings[i]], [embeddings[i+1]])[0][0]
+                distances.append(1 - sim)
+        else:
+            distances = []
 
-        # We can use percentile as threshold if threshold implies percentile
-        # But for now, let's treat the incoming threshold as a specific distance value (e.g. 0.3)
-        # Higher distance = less similar. Break if distance > threshold.
-        
-        start_idx = 0
-        
-        # Simple loop to create chunks
-        current_chunk = [sentences[0]]
-        
         for i in range(len(distances)):
             dist = distances[i]
+            next_sent = sentences[i+1]
+            next_type = self._classify_chunk(next_sent)
+            current_sent = sentences[i]
+            current_type = self._classify_chunk(current_sent)
             
-            if dist > threshold:
-                # Semantic shift detected, finalize current chunk
+            # --- Logic for Grouping ---
+            
+            # 1. Force Break: If next item is a Header, almost always start new chunk
+            # (unless current chunk is very small)
+            is_header_break = (next_type == "header")
+            
+            # 2. Force Group: 
+            # - If current is Header, always keep next with it (Context)
+            # - If both are Table Rows, keep together
+            # - If both are List Items of same style (heuristic), prefer keeping together
+            # - If next is very short (< 30 chars), prefer keeping with previous
+            is_forced_group = (
+                (current_type == "header") or 
+                (current_type == "table_row" and next_type == "table_row") or
+                (len(next_sent) < 50 and next_type == "text") # Keep short/fragments together
+            )
+            
+            # 3. Size Constraint
+            is_under_size = (current_chunk_size < min_chunk_size)
+            
+            # Decision
+            should_split = False
+            
+            if is_header_break and not is_under_size:
+                should_split = True
+            elif is_forced_group:
+                should_split = False
+            elif is_under_size:
+                should_split = False # Keep growing to meet min size
+            elif dist > threshold:
+                should_split = True # Semantic shift detected
+            
+            # Execute
+            if should_split:
                 chunks.append(" ".join(current_chunk))
-                current_chunk = [sentences[i+1]]
+                current_chunk = [next_sent]
+                current_chunk_size = len(next_sent)
             else:
-                # Similar enough, continue chunk
-                current_chunk.append(sentences[i+1])
+                current_chunk.append(next_sent)
+                current_chunk_size += len(next_sent) + 1 # +1 for space
         
         # Append the last chunk
         if current_chunk:

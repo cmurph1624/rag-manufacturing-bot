@@ -152,11 +152,11 @@ if [ ! -f "scripts/evaluate_ragas.py" ]; then
 fi
 print_success "evaluate_ragas.py found"
 
-# Check if .env exists
-if [ ! -f ".env" ]; then
-    print_warning ".env file not found (will use defaults)"
+# Check if config.yaml exists
+if [ ! -f "config.yaml" ]; then
+    print_warning "config.yaml file not found (using defaults)"
 else
-    print_success ".env file found"
+    print_success "config.yaml file found"
 fi
 
 # Export Environment Variables for Model/Retrieval override
@@ -171,39 +171,39 @@ if [ -n "$RETRIEVAL" ]; then
 fi
 
 # Build command
-CMD="python3 scripts/evaluate_ragas.py"
+CMD=("python3" "scripts/evaluate_ragas.py")
 
 if [ -n "$LIMIT" ]; then
-    CMD="$CMD --limit $LIMIT"
+    CMD+=("--limit" "$LIMIT")
 fi
 
 if [ -n "$RUN_NAME" ]; then
-    CMD="$CMD --name $RUN_NAME"
+    CMD+=("--name" "$RUN_NAME")
 fi
 
 if [ -n "$CATEGORY" ]; then
-    CMD="$CMD --category $CATEGORY"
+    CMD+=("--category" "$CATEGORY")
 fi
 
 if [ -n "$TEST_ID" ]; then
-    CMD="$CMD --id $TEST_ID"
+    CMD+=("--id" "$TEST_ID")
 fi
 
 # Show configuration
 print_header "Evaluation Configuration"
-echo "Command: $CMD"
+echo "Command: ${CMD[*]}"
 echo ""
 echo "Settings:"
 [ -n "$LIMIT" ] && echo "  - Questions: $LIMIT" || echo "  - Questions: All"
-[ -n "$MODEL" ] && echo "  - Gen Model: $MODEL" || echo "  - Gen Model: from .env ($LLM_MODEL_NAME)"
-[ -n "$RETRIEVAL" ] && echo "  - Retrieval: $RETRIEVAL" || echo "  - Retrieval: from .env ($RETRIEVAL_STRATEGY)"
+[ -n "$MODEL" ] && echo "  - Gen Model: $MODEL" || echo "  - Gen Model: from config/env ($LLM_MODEL_NAME)"
+[ -n "$RETRIEVAL" ] && echo "  - Retrieval: $RETRIEVAL" || echo "  - Retrieval: from config/env ($RETRIEVAL_STRATEGY)"
 echo ""
 
 # Run evaluation
 print_header "Running Evaluation"
 echo ""
 
-if $CMD; then
+if "${CMD[@]}"; then
     echo ""
     print_header "Evaluation Complete"
     print_success "Ragas evaluation finished successfully."

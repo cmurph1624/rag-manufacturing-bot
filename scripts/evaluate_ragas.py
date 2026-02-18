@@ -31,7 +31,7 @@ OUTPUT_CSV_PATH = os.path.join("evaluation_results", "ragas_results.csv")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307") 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2" # Local embeddings
 
-def load_dataset(custom_path: str = None, category_filter: str = None, id_filter: int = None) -> List[Dict]:
+def load_dataset(custom_path: str = None, category_filter: str = None, id_filter: List[int] = None) -> List[Dict]:
     """Loads the evaluation dataset, preferring tests/test_set.json or custom path."""
     if custom_path:
         path = custom_path
@@ -58,8 +58,8 @@ def load_dataset(custom_path: str = None, category_filter: str = None, id_filter
             print(f"Filtering dataset for category: '{category_filter}'")
             filtered_items = [item for item in all_items if item.get("category") == category_filter]
         elif id_filter:
-            print(f"Filtering dataset for ID: {id_filter}")
-            filtered_items = [item for item in all_items if item.get("id") == id_filter]
+            print(f"Filtering dataset for IDs: {id_filter}")
+            filtered_items = [item for item in all_items if item.get("id") in id_filter]
         else:
             filtered_items = all_items
 
@@ -71,7 +71,7 @@ def load_dataset(custom_path: str = None, category_filter: str = None, id_filter
                 print(f"Available categories: {available_categories}")
             
             if not filtered_items:
-                filter_desc = f"category '{category_filter}'" if category_filter else f"ID {id_filter}"
+                filter_desc = f"category '{category_filter}'" if category_filter else f"IDs {id_filter}"
                 print(f"WARNING: No items found for {filter_desc}.")
                 return []
             
@@ -141,7 +141,7 @@ def run_inference(dataset: List[Dict]) -> Dict[str, List]:
         "ground_truth": ground_truths
     }
 
-def main(limit: int = None, dataset_path: str = None, category: str = None, test_id: int = None):
+def main(limit: int = None, dataset_path: str = None, category: str = None, test_ids: List[int] = None):
     # 1. Check for API Key
     if not os.getenv("ANTHROPIC_API_KEY"):
         print("ERROR: ANTHROPIC_API_KEY not found in environment variables.")
@@ -150,7 +150,7 @@ def main(limit: int = None, dataset_path: str = None, category: str = None, test
 
     # 2. Load Data & Run Inference
     try:
-        raw_data = load_dataset(dataset_path, category, test_id)
+        raw_data = load_dataset(dataset_path, category, test_ids)
         
         if not raw_data:
             print("No data to evaluate. Exiting.")
@@ -239,15 +239,26 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=None, help="Limit the number of evaluations (default: All)")
     parser.add_argument("--dataset", type=str, default=None, help="Path to specific evaluation dataset (optional)")
     parser.add_argument("--category", type=str, default=None, help="Filter evaluation by category (e.g., 'Adversarial')")
-    parser.add_argument("--id", type=int, default=None, help="Filter evaluation by specific test ID (e.g., 1)")
+    parser.add_argument("--id", type=str, default=None, help="Filter evaluation by specific test IDs (comma-separated, e.g., '1,2,5')")
     args = parser.parse_args()
 
-    # Generate timestamped filename
+    # Parse IDs
+    test_ids = []
+    if args.id:
+        try:
+            test_ids = [int(x.strip()) for x in args.id.split(',') if x.strip()]
+        except ValueError:
+            print(f"Error: Invalid test ID format specified: {args.id}. must be integer or comma-separated integers.")
+            sys.exit(1)
+
     # Generate timestamped filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    if args.id:
-        name_tag = f"{args.name}_id_{args.id}"
+    if test_ids:
+        if len(test_ids) == 1:
+            name_tag = f"{args.name}_id_{test_ids[0]}"
+        else:
+            name_tag = f"{args.name}_ids_{len(test_ids)}"
     elif args.category:
         name_tag = f"{args.name}_{args.category}"
     else:
@@ -265,8 +276,10 @@ if __name__ == "__main__":
         print(f"Category Filter: {args.category}")
     if args.limit:
         print(f"Limit: {args.limit} items")
+    if test_ids:
+        print(f"ID Filter: {test_ids}")
+
     print(f"Output will be saved to: {OUTPUT_CSV_PATH}")
 
     # Pass args to main
-    # Pass args to main
-    main(limit=args.limit, dataset_path=args.dataset, category=args.category, test_id=args.id)
+    main(limit=args.limit, dataset_path=args.dataset, category=args.category, test_ids=test_ids)

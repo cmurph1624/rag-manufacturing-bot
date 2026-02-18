@@ -122,7 +122,7 @@ Ensure you have the following environment variables in your `.env` file:
 
 ```bash
 # Start the bot
-python3 src/bot.py
+python3 -m src.bot
 ```
 
 ---

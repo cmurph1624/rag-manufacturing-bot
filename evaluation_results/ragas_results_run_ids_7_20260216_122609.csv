@@ -1,0 +1,59 @@
+user_input,retrieved_contexts,response,reference,faithfulness,answer_relevancy,context_precision,context_recall,id
+Which Loctite type should be used for the rotor arm assembly?,"['Installation Steps WARNING: Ensure the battery is disconnected before beginning\nassembly. ● Step 1: Align the Rotor Arm (RA-400) with the mounting bracket on the Main Chassis.', 'AeroStream Drones - Standard Operating Procedure Document ID: SOP-01 | Rev: 2.4 |\nDate: 2024-11-15 Subject: Rotor Arm Installation for Falcon X1\n1. Scope This procedure covers the installation of the Carbon Fiber Rotor Arms (Part #RA-400)\nonto the Main Chassis (Part #MC-100).', 'Q: <@U0A5BUYTAG7> What is the torque setting?\n A: Thinking...\n A: According to SOP-01 | Rev: 2.4, the torque setting for screws is 2.5 Nm.\n\n*References:*\n• Maint_Schedule_Commercial_Fleet.pdf (Page 1)\n• TechNote_Firmware_Update_v4.0.pdf (Page 1)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 1)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 2)', 'Q: <@U0A5BUYTAG7> What is the recommended torque setting for the Rotor Arm screws on the Falcon X1?\n A: Thinking...\n A:  The recommended torque setting for the rotor arm screws on the Falcon X1 is 2.5 Nm.\n\n*References:*\n• Slack API (Page Unknown)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)', 'Q: <@U0A5BUYTAG7> What is the torque setting for the rotor arm screws?']","According to SOP-01 | Rev: 2.4, the recommended thread lock for the Rotor Arm screws on the Falcon X1 is Loctite Blue (Part #L-400B).
+
+*References:*
+• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)
+• Slack API (Page Unknown)",Loctite 243 (Blue) should be applied to the threads.,0.0,0.4866397860291651,0.5833333333041666,0.0,2
+How do you enter DFU Mode on the drone for a firmware update?,"['Select the .bin file and click ""Flash.""\nCommon Issues\n● If the update stalls at 99%, unplug the USB cable and restart the drone. It usually\ncompletes on reboot.', '● Do not turn off the remote controller during the update.', 'Connect the drone to the PC using a USB-C cable.', 'Hold the power button for 5 seconds until the drone beeps three times.', ""Q: I can't get the battery out. The release tab is stuck solid.\n A: Strong_Man: Pull harder.\n A: Safety_Sam: Don't force it, you'll snap the plastic.\n A: Safety_Sam: The latch gets jammed under pressure. Push the battery DOWN firmly into the drone first.\n A: Safety_Sam: While pushing down, pull the release tab. It should slide right out.""]","According to the context provided, I don't see information on entering DFU (Device Firmware Update) mode specifically for the drone's firmware update.
+
+However, there is an option in the ""Connect the drone to the PC using a USB-C cable"" step that may be related. The instructions state: 
+
+""Hold the power button for 5 seconds until the drone beeps three times.""
+
+While this instruction is not directly about entering DFU mode, it does indicate how to initiate the update process on the drone.
+
+*References:*
+• TechNote_Firmware_Update_v4.0.pdf (Page Unknown)
+• Slack API (Page Unknown)",Hold the power button for 5 seconds until the drone beeps three times.,0.6,0.0,0.249999999975,1.0,5
+What does a Solid Red LED pattern indicate on the Falcon series?,"['Q: How do I fix the death wobble on the Falcon X1?""', 'Q: <@U0A5BUYTAG7> How do I fix the death wobble on the Falcon X1?\n A: Thinking...\n A: I don\'t know how to fix the ""death wobble"" issue on the Falcon X1.\n\n*References:*\n• TechNote_Firmware_Update_v4.0.pdf (Page 1)\n• Maint_Schedule_Commercial_Fleet.pdf (Page 1)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 2)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 1)\n• Safety_LiPo_Battery_Handling.pdf (Page 3)', 'Q: <@U0A5BUYTAG7> How do I fix the death wobble on the Falcon X1?\n A: Thinking...\n A: To fix the death wobble on the Falcon X1, check if the rubber dampeners on the gimbal have stiffened up due to being too cold (below 5°C). If so, warm them up in your hands before flight.\n\n*References:*\n• Slack Thread (Page Unknown)\n• TechNote_Firmware_Update_v4.0.pdf (Page 1)', 'AeroStream Technical Note Topic: Updating Firmware to v4.0 (AI Flight Assist)\nIntroduction The v4.0 update introduces ""Obstacle Avoidance"" for the Falcon Pro. It is optional\nfor the Falcon X1. Update Process via USB\n1.', '● Step 3: Tighten screws in a cross pattern (Top-Left, Bottom-Right, Top-Right,\nBottom-Left) to ensure even seating.']","I don't have enough information to provide an answer. The provided context doesn't mention what a solid red LED pattern indicates on the Falcon series.
+
+*References:*
+• Slack Thread (Page Unknown)
+• TechNote_Firmware_Update_v4.0.pdf (Page 1)
+
+However, I can tell you that according to SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 2), the rotor arm assembly instructions mention flashing lights, but do not provide any information on what a solid red LED pattern indicates.
+
+It seems that more context is required to answer this question accurately. If you have more information or clarification, I'll be happy to help.
+
+*References:*
+• Slack API (Page Unknown)
+• TechNote_Firmware_Update_v4.0.pdf (Page Unknown)
+• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)",It indicates a Critical Low Battery error (Code E-500). Land immediately.,1.0,0.0,0.0,0.0,7
+What does a Flashing Yellow LED light mean?,"['This enters DFU\nMode.', 'AeroStream Drones - Safety Data Sheet Material: Lithium Polymer (LiPo) High-Voltage\nBatteries\n1.', ""Q: What is the 'compass dance' everyone talks about? My drone is drifting.\n A: Dancer_01: It's just the calibration.\n A: Dancer_01: Tap 'Calibrate Compass' in the app.\n A: Dancer_01: Hold the drone flat and spin 360 degrees until the light turns green.\n A: Dancer_01: Then point the nose straight down at the ground and spin 360 degrees again.\n A: Dancer_01: Make sure you do this away from your car or keys, or it will fail."", 'Download the Falcon_FW_v4.0.bin file from the AeroStream portal.', 'Q: How do I fix the death wobble on the Falcon X1?""']","I cannot provide information on the meaning of a flashing yellow LED light without more context. The provided context only discusses issues with the AeroStream Drones and Lithium Polymer (LiPo) High-Voltage batteries, as well as calibration procedures for the compass. If you're experiencing an issue with your drone's LED lights, I recommend consulting the user manual or contacting AeroStream support for specific guidance.
+
+*References:*
+• TechNote_Firmware_Update_v4.0.pdf (Page Unknown)
+• Safety_LiPo_Battery_Handling.pdf (Page Unknown)
+• Slack API (Page Unknown)",GPS Signal Lost (Code E-202). You should switch to Manual Mode and fly to an open area.,0.5,0.0,0.0,0.0,9
+What is the maximum ambient temperature allowed for charging the batteries?,"['● Do not charge if the ambient temperature is above 40°C (104°F).', 'Charging Safety\n● NEVER leave batteries unattended while charging.', 'Replace battery.', '● Ensure battery latch clicks firmly into place.', 'Storage Procedures\n● If the drone will not be flown for more than 7 days, discharge the battery to storage\nvoltage (3.8V per cell). ● Storing a fully charged battery causes internal resistance buildup, known as ""Puffing.""\n3. Emergency Procedures\n● Punctured Battery: If a battery is punctured, it may emit thick white smoke.']","According to the provided context, the maximum ambient temperature allowed for charging the batteries is above 40°C (104°F). The exact specification or guidance on the minimum temperature limit is not present in the given text.
+
+*References:*
+• Safety_LiPo_Battery_Handling.pdf (Page Unknown)
+• TS_Guide_Falcon_Series_Error_Codes.pdf (Page Unknown)
+• Maint_Schedule_Commercial_Fleet.pdf (Page Unknown)",Do not charge if the ambient temperature is above 40°C (104°F).,0.5,0.0,0.9999999999,1.0,13
+What tool is required to install the M3x10 screws on the Rotor Arm?,"['● Step 2: Insert four M3x10 screws. Apply a single drop of Loctite 243 to the threads of\neach screw.', 'Installation Steps WARNING: Ensure the battery is disconnected before beginning\nassembly. ● Step 1: Align the Rotor Arm (RA-400) with the mounting bracket on the Main Chassis.', 'Q: <@U0A5BUYTAG7> What is the torque setting for the rotor arm screws?', 'AeroStream Drones - Standard Operating Procedure Document ID: SOP-01 | Rev: 2.4 |\nDate: 2024-11-15 Subject: Rotor Arm Installation for Falcon X1\n1. Scope This procedure covers the installation of the Carbon Fiber Rotor Arms (Part #RA-400)\nonto the Main Chassis (Part #MC-100).', 'Q: <@U0A5BUYTAG7> What is the torque setting?\n A: Thinking...\n A: According to SOP-01 | Rev: 2.4, the torque setting for screws is 2.5 Nm.\n\n*References:*\n• Maint_Schedule_Commercial_Fleet.pdf (Page 1)\n• TechNote_Firmware_Update_v4.0.pdf (Page 1)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 1)\n• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page 2)']","According to SOP-01 | Rev: 2.4, the tool required for installing the M3x10 screws on the Rotor Arm is not explicitly mentioned in the provided context.
+
+However, I can confirm that a single drop of Loctite 243 was mentioned to be applied to the threads of each screw (Step 2). No information about a specific tool for driving the screws was found.
+
+*References:*
+• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)
+• Slack API (Page Unknown)",A 3mm Hex Key.,1.0,0.0,0.7499999999625,0.0,17
+"If there are no lights on the drone, what fuse should be checked?","['Check fuse F1.', 'Ensure the red arrow on the arm points toward the front of the drone.', ""Q: What is the 'compass dance' everyone talks about? My drone is drifting.\n A: Dancer_01: It's just the calibration.\n A: Dancer_01: Tap 'Calibrate Compass' in the app.\n A: Dancer_01: Hold the drone flat and spin 360 degrees until the light turns green.\n A: Dancer_01: Then point the nose straight down at the ground and spin 360 degrees again.\n A: Dancer_01: Make sure you do this away from your car or keys, or it will fail."", 'Select the .bin file and click ""Flash.""\nCommon Issues\n● If the update stalls at 99%, unplug the USB cable and restart the drone. It usually\ncompletes on reboot.', 'Q: Help! My Falcon Pro is only getting like 500m range before the signal drops. Box says 5km.\n A: Pilot_Dave: Send it back, sounds like a dud unit.\n A: Tech_Guru: @Pilot_Dave hold on. @OP, how are you holding the controller?\n A: OP_Flyer: Just normal, pointing the antennas right at the drone.\n A: Tech_Guru: That is your problem. This is a common mistake. Dipole antennas radiate from the sides, not the tip. You need to orient the antennas perpendicular to the drone (broadside), not point the tips at it.\n A: OP_Flyer: Wow, just tried that and signal went to 100%. Thanks!']","According to the context, I couldn't find any explicit mention of a specific fuse being checked or replaced. However, in another part of the context, it's mentioned that ""Check fuse F1."" doesn't seem to have an associated instruction on when to check it, but I found a similar query earlier about checking a fuse.
+
+Given the lack of further information and considering the absence of any explicit details on what fuse is being referred to as ""F1"", I'm unable to provide more specific guidance.
+
+*References:*
+• TS_Guide_Falcon_Series_Error_Codes.pdf (Page Unknown)
+• SOP-01_Rotor_Arm_Assembly_Falcon_X1.pdf (Page Unknown)
+• Slack API (Page Unknown)
+• TechNote_Firmware_Update_v4.0.pdf (Page Unknown)",Check fuse F1 (and check battery contacts for corrosion).,0.0,0.0,0.9999999999,1.0,20

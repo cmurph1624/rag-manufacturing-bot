@@ -85,7 +85,7 @@ See `.env.example` for a complete template with all available options.
 
 3.  **Run the Bot**:
     ```bash
-    python src/bot.py
+python3 -m src.bot
     ```
 
 3.  **Run Evaluations (RAGAS)**:

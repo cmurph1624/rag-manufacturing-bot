@@ -1,0 +1,8 @@
+user_input,retrieved_contexts,response,reference,faithfulness,answer_relevancy,context_precision,context_recall,id
+Which Loctite type should be used for the rotor arm assembly?,[],I couldn't find any relevant documents in the database.,Loctite 243 (Blue) should be applied to the threads.,0.0,0.0,0.0,0.0,2
+How do you enter DFU Mode on the drone for a firmware update?,[],I couldn't find any relevant documents in the database.,Hold the power button for 5 seconds until the drone beeps three times.,0.0,0.0,0.0,0.0,5
+What does a Solid Red LED pattern indicate on the Falcon series?,[],I couldn't find any relevant documents in the database.,It indicates a Critical Low Battery error (Code E-500). Land immediately.,0.0,0.0,0.0,0.0,7
+What does a Flashing Yellow LED light mean?,[],I couldn't find any relevant documents in the database.,GPS Signal Lost (Code E-202). You should switch to Manual Mode and fly to an open area.,0.0,0.0,0.0,0.0,9
+What is the maximum ambient temperature allowed for charging the batteries?,[],I couldn't find any relevant documents in the database.,Do not charge if the ambient temperature is above 40°C (104°F).,0.0,0.0,0.0,0.0,13
+What tool is required to install the M3x10 screws on the Rotor Arm?,[],I couldn't find any relevant documents in the database.,A 3mm Hex Key.,0.0,0.0,0.0,0.0,17
+"If there are no lights on the drone, what fuse should be checked?",[],I couldn't find any relevant documents in the database.,Check fuse F1 (and check battery contacts for corrosion).,0.0,0.0,0.0,0.0,20

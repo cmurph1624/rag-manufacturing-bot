@@ -1,0 +1,9 @@
+# RAG Manufacturing Bot Configuration
+
+# Retrieval Strategy
+# Options: semantic, semantic-rerank, lexical
+retrieval_strategy: "semantic"
+
+# LLM Model Name
+# Options: llama, llama3.2, mistral, etc.
+llm_model_name: "llama"

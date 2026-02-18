@@ -12,5 +12,8 @@ class IngestionFactory:
         elif strategy_type == "semantic":
             from .strategies.semantic import SemanticIngestionStrategy
             return SemanticIngestionStrategy()
+        elif strategy_type == "structure":
+            from .strategies.structure import StructureIngestionStrategy
+            return StructureIngestionStrategy()
         else:
             raise ValueError(f"Unknown ingestion strategy: {strategy_type}")

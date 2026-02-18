@@ -21,5 +21,5 @@ if __name__ == "__main__":
         sys.exit(0)
     else:
         print("\nModel download failed. Please check your internet connection or HuggingFace token.")
-        print("Alternatively, switch RETRIEVAL_STRATEGY to 'semantic' in .env to skip reranking.")
+        print("Alternatively, switch retrieval_strategy to 'semantic' in config.yaml to skip reranking.")
         sys.exit(1)
