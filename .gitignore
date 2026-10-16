@@ -1,14 +1,22 @@
+# Python
 venv/
-.env
+.venv/
 __pycache__/
 *.pyc
-.DS_Store
+.pytest_cache/
 
-# Data directories
+# Secrets
+.env
+
+# Local data (vector store, SQLite logs, bot interaction logs)
 data/chroma_db/
-data/databases/*.db
+data/databases/
 data/logs/
+*.db
+*.sqlite
+*.sqlite3
 
-# IDE
+# OS / IDE
+.DS_Store
 .vscode/
 .idea/
