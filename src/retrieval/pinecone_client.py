@@ -1,9 +1,8 @@
 import os
 import time
 from pinecone import Pinecone, ServerlessSpec
-from dotenv import load_dotenv
 
-load_dotenv()
+import src.config  # noqa: F401  (loads .env)
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "aerostream-docs")
@@ -29,6 +28,9 @@ def get_pinecone_index(create_if_missing: bool = False, dimension: int = 768):
     Default dimension is 768 (for nomic-embed-text).
     """
     global _pc_index
+    if _pc_index is not None:
+        return _pc_index
+
     client = get_pinecone_client()
     
     # Check if index exists
@@ -53,7 +55,5 @@ def get_pinecone_index(create_if_missing: bool = False, dimension: int = 768):
         else:
             raise ValueError(f"Pinecone index '{PINECONE_INDEX_NAME}' does not exist.")
             
-    if _pc_index is None:
-        _pc_index = client.Index(PINECONE_INDEX_NAME)
-        
+    _pc_index = client.Index(PINECONE_INDEX_NAME)
     return _pc_index

@@ -1,0 +1,9 @@
+# Lightweight set for running the unit tests (no LangChain, Chroma or model downloads)
+pytest
+numpy
+PyYAML
+python-dotenv
+ollama
+pdfplumber
+slack_sdk
+certifi

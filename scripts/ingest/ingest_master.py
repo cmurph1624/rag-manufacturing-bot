@@ -8,7 +8,7 @@ from src.ingest.factory import IngestionFactory
 from src.ingest.base import DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP
 
 def main():
-    parser = argparse.ArgumentParser(description="Ingest documents into ChromaDB.")
+    parser = argparse.ArgumentParser(description="Ingest documents into the vector store.")
     
     # Generic Args
     parser.add_argument("--reset", action="store_true", help="Reset the database before ingestion")
@@ -20,6 +20,10 @@ def main():
     
     # Semantic Strategy Args
     parser.add_argument("--semantic_threshold", type=float, default=0.4, help="Cosine distance threshold for semantic chunking (0.0-1.0)")
+
+    # Structure Strategy Args
+    parser.add_argument("--max_size", type=int, default=1500, help="Maximum chunk size in characters (structure)")
+    parser.add_argument("--min_size", type=int, default=200, help="Minimum chunk size in characters (structure)")
 
     args = parser.parse_args()
     
@@ -33,14 +37,16 @@ def main():
             reset=args.reset,
             chunk_size=args.chunk_size,
             overlap=args.overlap,
-            semantic_threshold=args.semantic_threshold
+            semantic_threshold=args.semantic_threshold,
+            max_size=args.max_size,
+            min_size=args.min_size,
         )
     except ValueError as e:
         print(f"Error: {e}")
-        exit(1)
+        sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        exit(1)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

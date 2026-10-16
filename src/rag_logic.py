@@ -1,27 +1,62 @@
 import ollama
-from dotenv import load_dotenv
-from typing import Dict, Any, Optional, List
-import os
+from functools import lru_cache
+from typing import Dict, Any
 import time
+import traceback
 
 # LangChain Imports
 from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.documents import Document
 
 # Custom Imports
 from src.retrieval import RetrievalFactory
 from src.llm import LLMFactory
 from src.prompts.answer_prompt import SYSTEM_INSTRUCTION
 from src.config import RETRIEVAL_STRATEGY, LLM_MODEL_NAME
-
-# Load environment variables
-load_dotenv()
+from src.formatting import format_citations
 
 # Configuration
 GENERATION_MODEL = LLM_MODEL_NAME
 DEFAULT_RETRIEVAL_STRATEGY = RETRIEVAL_STRATEGY
+SAFETY_MODEL = "llama-guard3:1b"
+
+REFUSAL_MESSAGE = "I am unable to help with this request as it has been deemed unsafe"
+ERROR_MESSAGE = "Sorry, something went wrong while answering that. Please try again shortly."
+
+
+@lru_cache(maxsize=None)
+def _get_rag_chain(retrieval_strategy_type: str, model_name: str):
+    """
+    Builds the retriever + LLM chain once per (strategy, model).
+    Building is expensive (the reranker loads a cross-encoder and the lexical
+    retriever builds a BM25 index), so it is reused across queries.
+    """
+    print(f"Initializing LangChain RAG (Model: {model_name}, Strategy: {retrieval_strategy_type})...")
+    llm = LLMFactory.get_llm(model_name)
+    retriever = RetrievalFactory.get_strategy(retrieval_strategy_type)
+
+    # create_stuff_documents_chain fills {context} with the retrieved chunks
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", SYSTEM_INSTRUCTION + "\n\n{context}"),
+        ("human", "{input}"),
+    ])
+
+    question_answer_chain = create_stuff_documents_chain(llm, prompt)
+    return create_retrieval_chain(retriever, question_answer_chain)
+
+
+def is_unsafe(user_query: str) -> bool:
+    """Classifies the query with Llama Guard, which replies 'safe' or 'unsafe\\n<category>'."""
+    # keep_alive=0 unloads the guard model right away so it doesn't hold VRAM
+    response = ollama.chat(model=SAFETY_MODEL, messages=[
+        {'role': 'user', 'content': user_query},
+    ], keep_alive=0)
+    verdict = response['message']['content'].strip().lower()
+    if verdict.startswith("unsafe"):
+        print(f"Unsafe request detected: {verdict}")
+        return True
+    return False
 
 
 def generate_answer(
@@ -32,123 +67,60 @@ def generate_answer(
     Core RAG logic using LangChain.
 
     This function performs the following steps:
-    1. Safety Check (Raw Ollama Call with Llama Guard)
-    2. Build RAG Chain (Retriever + LLM)
-    3. Invoke Chain
-    4. Format Response with Citations
+    1. Safety Check (Llama Guard via Ollama)
+    2. Retrieve context and generate an answer (cached LangChain chain)
+    3. Append citations for the retrieved sources
 
     The return format is:
     {
         "answer": str,              # Generated answer with citations
         "retrieved_chunks": list,   # List of retrieved document texts
         "model": str,               # LLM model used
-        "retrieval_type": str       # Retrieval strategy used
+        "retrieval_type": str,      # Retrieval strategy used
+        "error": str                # Only present if something failed
     }
-
-    Args:
-        user_query: The user's question/query
-        retrieval_strategy_type: Retrieval strategy to use (default: from env var)
-
-    Returns:
-        Dict with keys: answer, retrieved_chunks, model, retrieval_type
     """
     try:
         # Step A: Safety Check
-        print("Checking safety with Llama Guard (1B)...")
         start_time = time.time()
-        
-        # Use local 1B model which is faster/lighter
-        # keep_alive=0 ensures we don't hog VRAM if not needed
-        safety_response = ollama.chat(model='llama-guard3:1b', messages=[
-            {'role': 'user', 'content': user_query},
-        ], keep_alive=0)
-        
+        if is_unsafe(user_query):
+            return {
+                "answer": REFUSAL_MESSAGE,
+                "retrieved_chunks": [],
+                "model": SAFETY_MODEL,
+                "retrieval_type": "blocked"
+            }
         print(f"Safety check complete in {time.time() - start_time:.2f}s")
-        
-        # Check if response indicates unsafe content
-        if 'unsafe' in safety_response['message']['content'].strip().lower():
-             print(f"Unsafe request detected: {safety_response['message']['content']}")
-             return {
-                 "answer": "I am unable to help with this request as it has been deemed unsafe",
-                 "retrieved_chunks": [],
-                 "model": "llama-guard3:1b",
-                 "retrieval_type": "blocked"
-             }
 
-
-        # Step B: Build LangChain RAG Pipeline
-        print(f"Initializing LangChain RAG (Model: {GENERATION_MODEL}, Strategy: {retrieval_strategy_type})...")
-
-        # Step C: Invoke Chain
-        # 1. Get Components
-        llm = LLMFactory.get_llm(GENERATION_MODEL)
-        retriever = RetrievalFactory.get_strategy(retrieval_strategy_type)
-
-        # 2. Define Prompt
-        # 2. Define Prompt
-        # We append {context} because create_stuff_documents_chain requires it in the prompt
-        system_prompt = SYSTEM_INSTRUCTION + "\n\n{context}"
-
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "{input}"),
-        ])
-
-        # 3. Create Chains
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-
-        # 4. Invoke Chain
-        print(f"Invoking chain for query: '{user_query}'...")
+        # Step B: Retrieve + Generate
+        rag_chain = _get_rag_chain(retrieval_strategy_type, GENERATION_MODEL)
         response = rag_chain.invoke({"input": user_query})
-        
-        answer = response["answer"]
-        documents = response["context"] # List of Document objects
 
-        # Step D: Citations and Formatting
-        # Re-convert documents to string list for compatibility with existing return format
-        doc_texts = [doc.page_content for doc in documents]
-        
-        print(f"\n--- DEBUG: Retrieved Context (LangChain) ---")
-        for d in doc_texts:
-            print(d[:200] + "...")
-        print("--------------------------------\n")
-        
+        answer = response["answer"]
+        documents = response["context"]  # List of Document objects
+
         if not documents:
-             return {
-                 "answer": "I couldn't find any relevant documents in the database.",
-                 "retrieved_chunks": [],
-                 "retrieval_type": retrieval_strategy_type
+            return {
+                "answer": "I couldn't find any relevant documents in the database.",
+                "retrieved_chunks": [],
+                "model": GENERATION_MODEL,
+                "retrieval_type": retrieval_strategy_type
             }
 
-        citations = []
-        seen_sources = set()
-        metadatas = [doc.metadata for doc in documents] # Extract metadata
-        
-        for meta in metadatas:
-            source = meta.get("source", "Unknown")
-            page = meta.get("page_number", "Unknown")
-            citation_key = f"{source}:{page}"
-            if citation_key not in seen_sources:
-                citations.append(f"• {source} (Page {page})")
-                seen_sources.add(citation_key)
-        
-        citation_text = "\n\n*References:*\n" + "\n".join(citations)
-        final_answer = f"{answer}{citation_text}"
-        
+        # Step C: Citations
         return {
-            "answer": final_answer,
-            "retrieved_chunks": doc_texts,
+            "answer": answer + format_citations(doc.metadata for doc in documents),
+            "retrieved_chunks": [doc.page_content for doc in documents],
             "model": GENERATION_MODEL,
             "retrieval_type": retrieval_strategy_type
         }
 
     except Exception as e:
+        # Details go to the server log and the "error" field, never to the end user
         print(f"Error processing request: {e}")
-        import traceback
         traceback.print_exc()
         return {
-            "answer": f"Sorry, I encountered an error: {str(e)}",
+            "answer": ERROR_MESSAGE,
             "retrieved_chunks": [],
             "model": GENERATION_MODEL,
             "retrieval_type": retrieval_strategy_type,

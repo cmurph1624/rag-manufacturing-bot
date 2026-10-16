@@ -1,10 +1,12 @@
 from typing import List
-import os
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from rank_bm25 import BM25Okapi
 import numpy as np
+
+from src.config import VECTOR_DB
+from src.vectorstore import get_chroma_collection
 
 class LexicalRetriever(BaseRetriever):
     """
@@ -19,8 +21,6 @@ class LexicalRetriever(BaseRetriever):
 
     def _build_index_from_chroma(self):
         """Build BM25 index from ChromaDB."""
-        from .base import get_chroma_collection
-
         col = get_chroma_collection()
         all_docs = col.get(include=["documents", "metadatas"])
 
@@ -47,6 +47,7 @@ class LexicalRetriever(BaseRetriever):
         print(f"Fetching vectors from Pinecone for BM25 indexing (total: {total_vectors})...")
 
         all_ids = []
+        seen_ids = set()
         all_texts = []
         all_metadatas = []
 
@@ -79,9 +80,10 @@ class LexicalRetriever(BaseRetriever):
                     vec_id = match['id']
 
                     # Deduplicate
-                    if vec_id in all_ids:
+                    if vec_id in seen_ids:
                         continue
 
+                    seen_ids.add(vec_id)
                     all_ids.append(vec_id)
 
                     # Extract text from metadata
@@ -127,9 +129,7 @@ class LexicalRetriever(BaseRetriever):
         if self._bm25_index is not None:
             return  # Already built
 
-        vector_db_type = os.getenv("VECTOR_DB", "chroma")
-
-        if vector_db_type == "pinecone":
+        if VECTOR_DB == "pinecone":
             doc_ids, documents, metadatas, corpus = self._build_index_from_pinecone()
         else:
             doc_ids, documents, metadatas, corpus = self._build_index_from_chroma()

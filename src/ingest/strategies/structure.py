@@ -1,13 +1,7 @@
-import os
 import re
-import shutil
-from typing import List, Dict, Any, Tuple
+from typing import List
 
-from ..base import (
-    IngestionStrategy, get_chroma_collection, get_embedding, log_ingestion_config,
-    PDF_FOLDER, DB_PATH, DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP
-)
-from ..loaders import process_pdf, process_json, get_slack_client, fetch_slack_history
+from ..base import IngestionStrategy
 
 class StructureIngestionStrategy(IngestionStrategy):
     """
@@ -135,107 +129,34 @@ class StructureIngestionStrategy(IngestionStrategy):
             
         return final_chunks
 
-    def ingest(self, reset: bool = False, **kwargs):
-        chunk_size_param = kwargs.get("chunk_size", 1000) # Unused usually but good to log
-        # Params from kwargs or defaults
-        max_chunk = kwargs.get("max_size", 1500)
-        min_chunk = kwargs.get("min_size", 200)
+    def get_config(self, **kwargs):
+        return {
+            "max_size": kwargs.get("max_size", 1500),
+            "min_size": kwargs.get("min_size", 200),
+        }
 
-        # Handle Reset
-        if reset:
-            if os.path.exists(DB_PATH):
-                print(f"Resetting database: Removing {DB_PATH}...", flush=True)
-                shutil.rmtree(DB_PATH)
-            else:
-                print("Database path not found, nothing to reset.", flush=True)
-        
-        # Log Logic
-        config = {"strategy": "structure", "max_size": max_chunk, "min_size": min_chunk}
-        log_ingestion_config(self.type, config)
-        
-        print(f"Starting ingestion (Structure) with Max Size: {max_chunk}, Min Size: {min_chunk}", flush=True)
+    def chunk_pdf(self, filename, pages, config):
+        # Combine pages so sections that cross a page break stay together
+        full_text = ""
+        page_map = []  # (char_start, char_end, page_num)
+        for page_text, page_num in pages:
+            start = len(full_text)
+            full_text += page_text + "\n"
+            page_map.append((start, start + len(page_text), page_num))
 
-        collection = get_chroma_collection()
-        
-        # 1. Process Local Files (PDFs and JSONs)
-        if os.path.exists(PDF_FOLDER):
-            files = os.listdir(PDF_FOLDER)
-            print(f"Found {len(files)} files in {PDF_FOLDER}", flush=True)
-            
-            for filename in files:
-                file_path = os.path.join(PDF_FOLDER, filename)
-                
-                # PDF Processing
-                if filename.endswith(".pdf"):
-                    print(f"Processing PDF: {filename}...", flush=True) 
-                    pages = process_pdf(file_path)
-                    
-                    # Combine pages to maintain cross-page structure
-                    full_text = ""
-                    page_map = [] # (char_start, char_end, page_num)
-                    current_idx = 0
-                    
-                    for page_text, page_num in pages:
-                        # Clean up page headers/footers slightly if possible? 
-                        # For now, just append.
-                        page_len = len(page_text)
-                        full_text += page_text + "\n"
-                        page_map.append((current_idx, current_idx + page_len, page_num))
-                        current_idx += page_len + 1
-                    
-                    structural_chunks = self.chunk_by_structure(full_text, max_size=max_chunk, min_size=min_chunk)
-                    
-                    for i, chunk in enumerate(structural_chunks):
-                        # Find source page(s)
-                        # We'll map the chunk's start to a page
-                        chunk_start_in_full = full_text.find(chunk) # Approximate check
-                        # Better way: track indices in chunk_by_structure, but finding valid substring is okay for now
-                        # If finding fails (duplicates), we might get wrong page, but text context is unique enough usually
-                        
-                        source_page = 0
-                        # Simple lookup: which page range contains chunk_start_in_full
-                        if chunk_start_in_full != -1:
-                            for start, end, p_num in page_map:
-                                if start <= chunk_start_in_full <= end:
-                                    source_page = p_num
-                                    break
-                                    
-                        embedding = get_embedding(chunk)
-                        if embedding:
-                            collection.upsert(
-                                ids=[f"{filename}_struct_{i}"],
-                                documents=[chunk],
-                                embeddings=[embedding],
-                                metadatas=[{"source": filename, "page": source_page, "type": "structure"}]
-                            )
+        structural_chunks = self.chunk_by_structure(full_text, max_size=config["max_size"], min_size=config["min_size"])
 
-                # JSON Processing (Keep existing logic)
-                elif filename.endswith(".json"):
-                    # print(f"Processing JSON: {filename}...")
-                    json_chunks = process_json(file_path)
-                    for text, thread_id in json_chunks:
-                        embedding = get_embedding(text)
-                        if embedding:
-                            collection.upsert(
-                                ids=[f"{filename}_{thread_id}"],
-                                documents=[text],
-                                embeddings=[embedding],
-                                metadatas=[{"source": filename, "page": 0, "type": "conversation"}]
-                            )
+        # Chunks are contiguous, in-order substrings of full_text, so searching forward
+        # from the previous chunk finds each one's true position even if text repeats
+        cursor = 0
+        for i, chunk in enumerate(structural_chunks):
+            position = full_text.find(chunk, cursor)
+            source_page = 0
+            if position != -1:
+                cursor = position + len(chunk)
+                for start, end, page_num in page_map:
+                    if start <= position <= end:
+                        source_page = page_num
+                        break
 
-        # 2. Process Live Slack Data (Keep existing logic)
-        slack_client = get_slack_client()
-        slack_channel_id = os.getenv("SLACK_CHANNEL_ID")
-        
-        if slack_client and slack_channel_id:
-            for combined_text, ts in fetch_slack_history(slack_client, slack_channel_id):
-                embedding = get_embedding(combined_text)
-                if embedding:
-                    collection.upsert(
-                        ids=[f"slack_{ts}"],
-                        embeddings=[embedding],
-                        metadatas=[{"source": "Slack API", "timestamp": ts, "type": "tribal_knowledge"}],
-                        documents=[combined_text]
-                    )
-                    
-        print(f"--- Ingestion Complete ({self.type}) ---", flush=True)
+            yield f"{filename}_struct_{i}", chunk, {"source": filename, "page": source_page, "type": "structure"}
