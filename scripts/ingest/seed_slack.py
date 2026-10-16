@@ -9,14 +9,13 @@ load_dotenv()
 
 # Configuration
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
-CHANNEL_ID = "aerostream-support"  # Paste your channel ID here
+CHANNEL_ID = os.environ.get("SLACK_CHANNEL_ID", "aerostream-support")
 
 import ssl
+import certifi
 
 # Initialize WebClient
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+ssl_context = ssl.create_default_context(cafile=certifi.where())
 client = WebClient(token=SLACK_BOT_TOKEN, ssl=ssl_context)
 
 # Data Structure

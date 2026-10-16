@@ -1,32 +1,36 @@
-# LangChain core packages
+# LangChain
 langchain>=1.0.0
+langchain-classic
 langchain-community>=0.3.0
 langchain-core>=0.3.0
 langchain-ollama
 langchain-anthropic
-langchain-openai
 langchain-huggingface
 
-# ChromaDB and vector store
+# Vector stores
 langchain-pinecone
 langchain-chroma>=0.1.4
 chromadb==0.5.20
 chroma-hnswlib==0.7.6
 
-# Ollama and utilities
+# Models and utilities
 ollama
 python-dotenv
+PyYAML
+numpy
 sentence-transformers
+
+# Retrieval
+rank-bm25
+
+# Ingestion and Slack
+pdfplumber
+slack_sdk
+slack_bolt
+certifi
 
 # Evaluation
 ragas
+datasets
+pandas
 streamlit
-
-# Ingestion dependencies
-pdfplumber
-slack_sdk
-certifi
-rank-bm25
-slack_bolt
-PyYAML
-

@@ -18,12 +18,3 @@ SYSTEM_INSTRUCTION = (
     "- Do not answer general knowledge questions unrelated to the provided context\n"
     "- Do not make up information - only use what's explicitly stated in the context"
 )
-
-def format_user_prompt(context_text: str, user_query: str) -> str:
-    return (
-        f"Question: {user_query}\n\n"
-        f"Retrieved Context (examine all sections thoroughly):\n"
-        f"{context_text}\n\n"
-        f"Based on the above context, provide a complete and detailed answer. "
-        f"If the information is not present after reviewing all context sections, state that you don't know."
-    )

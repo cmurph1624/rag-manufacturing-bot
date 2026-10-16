@@ -5,22 +5,18 @@ import uuid
 from datetime import datetime
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from dotenv import load_dotenv
 import ssl
 import certifi
 from slack_sdk import WebClient
-# Import the separated logic
+# Import the separated logic (importing it also loads .env via src.config)
 from src.rag_logic import generate_answer
-
-# Load environment variables
-load_dotenv()
+from src.formatting import strip_mentions
 
 # Create SSL context using certifi
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"), ssl=ssl_context)
 
 # Initialize Slack App with custom WebClient
-
 app = App(client=client)
 
 # Logging Configuration
@@ -59,14 +55,19 @@ def handle_app_mention(event, say):
     """
     Event listener for app_mention.
     """
-    user_query = event.get("text")
-    channel_id = event.get("channel")
-    thread_ts = event.get("ts") # Reply in thread
+    # The message text includes the bot's own <@U...> mention; drop it before retrieval
+    user_query = strip_mentions(event.get("text"))
+    # Reply in the existing thread if there is one, otherwise start one
+    thread_ts = event.get("thread_ts") or event.get("ts")
 
     print(f"Received query: {user_query}")
 
+    if not user_query:
+        say("Ask me a question about our manufacturing docs, e.g. _Which Loctite is used on the rotor arm?_", thread_ts=thread_ts)
+        return
+
     # Step A: Acknowledge
-    say(f"Thinking...", thread_ts=thread_ts)
+    say("Thinking...", thread_ts=thread_ts)
 
     # Call the core logic with timing
     start_time = time.time()

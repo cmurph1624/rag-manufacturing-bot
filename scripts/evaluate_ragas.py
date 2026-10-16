@@ -13,22 +13,21 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="ragas.met
 from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall 
 
 # Add project root to path for src imports
-sys.path.append(os.getcwd())
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # LangChain / Provider Integrations
 from langchain_anthropic import ChatAnthropic
 from langchain_huggingface import HuggingFaceEmbeddings
 
 # Local Imports
-from src.rag_logic import generate_answer
+from src.rag_logic import generate_answer, REFUSAL_MESSAGE
 
 # --- Configuration ---
 EVAL_DATASET_PATH = os.path.join("data", "evaluation_dataset.json")
 OUTPUT_CSV_PATH = os.path.join("evaluation_results", "ragas_results.csv")
 
-# Use environment variable for model, default to Haiku (often more available/cheaper)
-# If you have access to Sonnet or Opus, set ANTHROPIC_MODEL in .env
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307") 
+# Judge model: defaults to Haiku (cheap, fast); set ANTHROPIC_MODEL in .env to use another
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-5-5")
 EMBEDDING_MODEL = "all-MiniLM-L6-v2" # Local embeddings
 
 def load_dataset(custom_path: str = None, category_filter: str = None, id_filter: List[int] = None) -> List[Dict]:
@@ -206,13 +205,12 @@ def main(limit: int = None, dataset_path: str = None, category: str = None, test
         if "id" in hf_dataset.features:
             df["id"] = hf_dataset["id"]
 
-        # --- FIX: Post-process "Unsafe" Refusals ---
-        # If the answer is the standard refusal message, we give it full marks.
-        # This prevents "unsafe" correct refusals from tanking the metrics (no context is retrieved).
-        refusal_msg = "I am unable to help with this request as it has been deemed unsafe"
-        
-        # Clean answer to match (strip trailing period if present in some versions/LLM output)
-        mask = df['response'].str.strip('.').str.strip() == refusal_msg
+        # --- Post-process "Unsafe" Refusals ---
+        # Adversarial questions are *supposed* to be refused, and a refusal retrieves no
+        # context, so RAGAS would score it 0. We give correct refusals full marks and flag
+        # them in a `refused` column so the adjustment is visible in the results.
+        mask = df['response'].str.strip('.').str.strip() == REFUSAL_MESSAGE
+        df['refused'] = mask
 
         if mask.any():
             print(f"Found {mask.sum()} unsafe refusals. Overwriting metrics to 1.0.")

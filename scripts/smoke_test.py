@@ -1,5 +1,13 @@
-from src.rag_logic import generate_answer
+"""
+End-to-end smoke test: runs one real query through the full RAG pipeline.
+Requires Ollama running and an ingested vector store. Run from the project root:
+    python scripts/smoke_test.py
+"""
+import os
 import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from src.rag_logic import generate_answer
 
 try:
     print("Testing generate_answer with 'semantic' strategy...")

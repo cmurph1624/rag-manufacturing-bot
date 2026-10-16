@@ -1,9 +1,14 @@
 # RAG Manufacturing Bot Configuration
+# Any key can be overridden by an environment variable of the same name in UPPERCASE.
 
 # Retrieval Strategy
 # Options: semantic, semantic-rerank, lexical
 retrieval_strategy: "semantic"
 
 # LLM Model Name
-# Options: llama, llama3.2, mistral, etc.
+# Options: llama (= llama3.2), mistral, or any model tag pulled into Ollama
 llm_model_name: "llama"
+
+# Vector Database
+# Options: chroma (local, default), pinecone (requires PINECONE_API_KEY)
+vector_db: "chroma"
