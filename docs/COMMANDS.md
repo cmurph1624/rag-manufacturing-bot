@@ -24,9 +24,20 @@ python3 scripts/ingest/ingest_master.py --reset --strategy semantic
 python3 scripts/ingest/ingest_master.py --reset --strategy semantic --semantic_threshold 0.3
 ```
 
+### 3. Structure Ingestion (Headers, Steps, Tables)
+Chunks along document structure (section headers, numbered steps, tables). Best performer on the SOP-style PDFs.
+
+```bash
+# Default (Max Size: 1500, Min Size: 200)
+python3 scripts/ingest/ingest_master.py --reset --strategy structure
+
+# Custom sizes
+python3 scripts/ingest/ingest_master.py --reset --strategy structure --max_size 1200 --min_size 150
+```
+
 ### Flags
--   `--reset`: Wipes the existing ChromaDB database before starting ingestion.
--   `--strategy`: `standard` or `semantic`.
+-   `--reset`: Clears the existing ChromaDB collection before starting ingestion.
+-   `--strategy`: `standard`, `semantic`, or `structure`.
 
 **Note**: Place your PDF files in `data/pdfs/` before running ingestion.
 
@@ -90,24 +101,10 @@ Launch the Ragas Dashboard (Streamlit) to visualize results.
 
 Or directly:
 ```bash
-python3 scripts/dashboard/app.py
+streamlit run scripts/dashboard/app.py
 ```
 
 The dashboard will be available at `http://localhost:8501`.
-
----
-
-## Database Utilities
-
-### Check Database
-```bash
-python3 scripts/database/check_db.py
-```
-
-### Verify Database
-```bash
-python3 scripts/database/verify_db.py
-```
 
 ---
 

@@ -33,7 +33,7 @@ The **Manufacturing Bot** serves as a centralized knowledge interface. It ingest
 *   **Language:** Python 3.10+
 *   **Orchestration Framework:** [LangChain](https://www.langchain.com/)
 *   **LLM Inference:** [Ollama](https://ollama.com/) (Local Inference)
-    *   **Generation Model:** `llama3` (or configured via `LLM_MODEL_NAME`)
+    *   **Generation Model:** `llama3.2` (or configured via `LLM_MODEL_NAME`)
     *   **Safety Model:** `llama-guard3:1b` (1B parameter model for efficiency)
 *   **Embedding Model:** `nomic-embed-text`
 *   **Vector Database:**
@@ -42,7 +42,7 @@ The **Manufacturing Bot** serves as a centralized knowledge interface. It ingest
 *   **Evaluation:** Ragas (Retrieval Augmented Generation Assessment)
 
 ### 3.2 System Data Flow
-1.  **User Input:** The user submits a natural language query via the dashboard.
+1.  **User Input:** The user @-mentions the bot in Slack with a natural language question.
 2.  **Safety Guardrail:** The input is immediately checked by `llama-guard3:1b` to detect and refuse adversarial, unsafe, or malicious prompts (e.g., "How to modify battery for explosion").
 3.  **Retrieval:** Use `RetrievalFactory` to select a strategy:
     *   **Semantic:** Vector similarity search using `nomic-embed-text`.
@@ -54,7 +54,8 @@ The **Manufacturing Bot** serves as a centralized knowledge interface. It ingest
 ### 3.3 Key Components
 *   **`src/rag_logic.py`**: The core application controller. Handles the end-to-end pipeline from safety check to response generation.
 *   **`src/retrieval/factory.py`**: A factory pattern implementation allowing dynamic switching between Chroma and Pinecone, as well as different retrieval algorithms (Semantic vs. Lexical).
-*   **`scripts/dashboard/`**: A Streamlit-based web interface for user interaction.
+*   **`src/bot.py`**: Slack bot (Socket Mode) that receives questions and replies in thread.
+*   **`scripts/dashboard/`**: A Streamlit dashboard for browsing RAGAS evaluation runs.
 *   **`tests/test_set.json`**: A curated "Golden Dataset" of question-answer pairs used for automated evaluation.
 
 ## 4. Domain Specifics (AeroStream)
